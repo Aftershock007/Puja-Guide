@@ -6,6 +6,8 @@ import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import RadioButtonInput from '@/components/Forms/RadioButtonInput'
 import TextInput from '@/components/Forms/TextInput'
+import Header from '@/components/Header'
+import { completeDetailsPageHeader } from '@/constants/Headings'
 
 interface FormData {
 	full_name: string
@@ -24,6 +26,32 @@ const CompleteYourAccountScreen = () => {
 	const [isLoading, setIsLoading] = useState<boolean>(false)
 	const router = useRouter()
 	const insets = useSafeAreaInsets()
+
+	const ageValidationRules: ValidationRules = {
+		validate: {
+			isNumeric: (value: string | number): boolean | string => {
+				const numValue = Number(value)
+				if (Number.isNaN(numValue)) {
+					return 'Age must be a number'
+				}
+				return true
+			},
+			isPositive: (value: string | number): boolean | string => {
+				const numValue = Number(value)
+				if (numValue <= 0) {
+					return 'Age must be greater than 0'
+				}
+				return true
+			},
+			isRealistic: (value: string | number): boolean | string => {
+				const numValue = Number(value)
+				if (numValue >= 100) {
+					return 'Age must be less than 100'
+				}
+				return true
+			}
+		}
+	}
 
 	const { control, handleSubmit, setError, setValue } = useForm<FormData>({
 		defaultValues: {
@@ -66,44 +94,15 @@ const CompleteYourAccountScreen = () => {
 		setValue('gender', String(user?.unsafeMetadata?.gender) || '')
 	}, [isLoaded, user, setValue])
 
-	const ageValidationRules: ValidationRules = {
-		validate: {
-			isNumeric: (value: string | number): boolean | string => {
-				const numValue = Number(value)
-				if (Number.isNaN(numValue)) {
-					return 'Age must be a number'
-				}
-				return true
-			},
-			isPositive: (value: string | number): boolean | string => {
-				const numValue = Number(value)
-				if (numValue <= 0) {
-					return 'Age must be greater than 0'
-				}
-				return true
-			},
-			isRealistic: (value: string | number): boolean | string => {
-				const numValue = Number(value)
-				if (numValue >= 100) {
-					return 'Age must be less than 100'
-				}
-				return true
-			}
-		}
-	}
-
 	return (
 		<View
-			className="flex-1 gap-5 bg-white p-5"
-			style={{ paddingTop: insets.top + 40, paddingBottom: insets.bottom }}
+			className="flex-1 gap-5 bg-white p-5 dark:bg-black"
+			style={{ paddingTop: insets.top + 20, paddingBottom: insets.bottom }}
 		>
-			<View className="w-full gap-1.5">
-				<Text className="font-bold text-3xl">Complete your account</Text>
-				<Text className="text-gray-500 text-sm">
-					Enter your details to complete your account setup. This helps us
-					provide a personalized experience and better recommendations.
-				</Text>
-			</View>
+			<Header
+				heading={completeDetailsPageHeader.heading}
+				subheading={completeDetailsPageHeader.subheading}
+			/>
 			<View className="mt-5 w-full gap-5">
 				<TextInput
 					control={control}
