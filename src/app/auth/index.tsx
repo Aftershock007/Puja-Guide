@@ -9,7 +9,7 @@ const AuthScreen = () => {
 
 	return (
 		<View
-			className="flex-1 gap-5 bg-white px-5 dark:bg-black"
+			className="flex-1 gap-5 bg-white px-5"
 			style={{ paddingTop: insets.top + 20, paddingBottom: insets.bottom }}
 		>
 			<Header

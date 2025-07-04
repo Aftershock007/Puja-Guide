@@ -1,25 +1,48 @@
 import { useUser } from '@clerk/clerk-expo'
+import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { z } from 'zod'
 import RadioButtonInput from '@/components/Forms/RadioButtonInput'
 import TextInput from '@/components/Forms/TextInput'
 import Header from '@/components/Header'
+import {
+	GENDER_OPTIONS,
+	GENDER_VALUES,
+	isValidGender
+} from '@/constants/GenderEnum'
 import { completeDetailsPageHeader } from '@/constants/Headings'
 
-interface FormData {
-	full_name: string
-	age: number
-	gender: string
-}
+const formSchema = z.object({
+	full_name: z
+		.string()
+		.min(1, 'Name is required')
+		.min(2, 'Name must be at least 2 characters')
+		.max(100, 'Name must be less than 100 characters'),
+	age: z
+		.string()
+		.min(1, 'Age is required')
+		.refine((val) => !Number.isNaN(Number(val)), {
+			message: 'Age must be a valid number'
+		})
+		.refine((val) => Number(val) > 0, {
+			message: 'Age must be greater than 0'
+		})
+		.refine((val) => Number(val) <= 99, {
+			message: 'Age must be less than 100'
+		})
+		.refine((val) => Number.isInteger(Number(val)), {
+			message: 'Age must be a whole number'
+		}),
+	gender: z.enum(GENDER_VALUES, {
+		required_error: 'Please select a gender'
+	})
+})
 
-interface ValidationRules {
-	validate?: {
-		[key: string]: (value: string | number) => boolean | string
-	}
-}
+type FormData = z.infer<typeof formSchema>
 
 const CompleteYourAccountScreen = () => {
 	const { user, isLoaded } = useUser()
@@ -27,39 +50,18 @@ const CompleteYourAccountScreen = () => {
 	const router = useRouter()
 	const insets = useSafeAreaInsets()
 
-	const ageValidationRules: ValidationRules = {
-		validate: {
-			isNumeric: (value: string | number): boolean | string => {
-				const numValue = Number(value)
-				if (Number.isNaN(numValue)) {
-					return 'Age must be a number'
-				}
-				return true
-			},
-			isPositive: (value: string | number): boolean | string => {
-				const numValue = Number(value)
-				if (numValue <= 0) {
-					return 'Age must be greater than 0'
-				}
-				return true
-			},
-			isRealistic: (value: string | number): boolean | string => {
-				const numValue = Number(value)
-				if (numValue >= 100) {
-					return 'Age must be less than 100'
-				}
-				return true
+	const { control, handleSubmit, setError, setValue, formState } =
+		useForm<FormData>({
+			resolver: zodResolver(formSchema),
+			mode: 'onChange',
+			defaultValues: {
+				full_name: '',
+				age: '',
+				gender: undefined
 			}
-		}
-	}
+		})
 
-	const { control, handleSubmit, setError, setValue } = useForm<FormData>({
-		defaultValues: {
-			full_name: '',
-			age: 0,
-			gender: ''
-		}
-	})
+	const { isValid } = formState
 
 	const onSubmit = async (data: FormData): Promise<void> => {
 		const { full_name, age, gender } = data
@@ -90,13 +92,22 @@ const CompleteYourAccountScreen = () => {
 			return
 		}
 		setValue('full_name', user?.fullName || '')
-		setValue('age', Number(user?.unsafeMetadata?.age) || 0)
-		setValue('gender', String(user?.unsafeMetadata?.gender) || '')
+
+		const userAge = user?.unsafeMetadata?.age
+		setValue(
+			'age',
+			userAge !== undefined && userAge !== null ? String(userAge) : ''
+		)
+
+		const userGender = String(user?.unsafeMetadata?.gender)
+		if (isValidGender(userGender)) {
+			setValue('gender', userGender)
+		}
 	}, [isLoaded, user, setValue])
 
 	return (
 		<View
-			className="flex-1 gap-5 bg-white p-5 dark:bg-black"
+			className="flex-1 gap-5 bg-white p-5"
 			style={{ paddingTop: insets.top + 20, paddingBottom: insets.bottom }}
 		>
 			<Header
@@ -106,9 +117,9 @@ const CompleteYourAccountScreen = () => {
 			<View className="mt-5 w-full gap-5">
 				<TextInput
 					control={control}
-					label="Full Name"
+					label="Name"
 					name="full_name"
-					placeholder="Enter your full name"
+					placeholder="Enter your name"
 					required
 				/>
 				<TextInput
@@ -118,32 +129,33 @@ const CompleteYourAccountScreen = () => {
 					name="age"
 					placeholder="Enter your age"
 					required
-					rules={ageValidationRules}
 				/>
 				<RadioButtonInput
 					control={control}
 					label="Gender"
 					name="gender"
-					options={[
-						{ label: 'Male', value: 'male' },
-						{ label: 'Female', value: 'female' },
-						{ label: 'Other', value: 'other' }
-					]}
+					options={GENDER_OPTIONS}
 					placeholder="Select your gender"
 					required
 				/>
 				<View className="mt-5">
 					<TouchableOpacity
-						className={`w-full flex-row items-center justify-center gap-2.5 rounded-lg bg-black p-2.5 ${
-							isLoading ? 'opacity-70' : 'opacity-100'
+						className={`w-full flex-row items-center justify-center gap-2.5 rounded-lg p-2.5 ${
+							isLoading || !isValid
+								? 'bg-gray-400 opacity-50'
+								: 'bg-black opacity-100'
 						}`}
-						disabled={isLoading}
+						disabled={isLoading || !isValid}
 						onPress={handleSubmit(onSubmit)}
 					>
 						{isLoading ? (
 							<ActivityIndicator color="white" size="small" />
 						) : null}
-						<Text className="text-white">
+						<Text
+							className={`${
+								isLoading || !isValid ? 'text-gray-600' : 'text-white'
+							}`}
+						>
 							{isLoading ? 'Loading...' : 'Complete Account'}
 						</Text>
 					</TouchableOpacity>

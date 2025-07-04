@@ -43,6 +43,7 @@ const TextInput = ({
 						onBlur={onBlur}
 						onChangeText={onChange}
 						placeholder={placeholder}
+						placeholderTextColor="#D3D3D3"
 						value={value?.toString() || ''}
 					/>
 					{error && <Text className="text-red-500">{error.message}</Text>}
