@@ -37,14 +37,14 @@ const Option = ({ optionLabel, value, onChange, isSelected }: OptionProps) => {
 	)
 }
 
-const RadioButtonInput = ({
+export default function RadioButtonInput({
 	control,
 	placeholder,
 	required,
 	label,
 	name,
 	options
-}: RadioButtonInputProps) => {
+}: RadioButtonInputProps) {
 	return (
 		<Controller
 			control={control}
@@ -76,5 +76,3 @@ const RadioButtonInput = ({
 		/>
 	)
 }
-
-export default RadioButtonInput

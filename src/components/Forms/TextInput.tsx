@@ -11,7 +11,7 @@ interface TextInputProps {
 	rules?: RegisterOptions
 }
 
-const TextInput = ({
+export default function TextInput({
 	control,
 	placeholder,
 	required,
@@ -19,7 +19,7 @@ const TextInput = ({
 	name,
 	keyboardType,
 	rules
-}: TextInputProps) => {
+}: TextInputProps) {
 	return (
 		<Controller
 			control={control}
@@ -56,5 +56,3 @@ const TextInput = ({
 		/>
 	)
 }
-
-export default TextInput

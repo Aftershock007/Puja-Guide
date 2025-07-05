@@ -4,7 +4,7 @@ import Header from '@/components/Header'
 import SocialLoginButton from '@/components/SocialLoginButton'
 import { authPageHeader } from '@/constants/Headings'
 
-const AuthScreen = () => {
+export default function AuthScreen() {
 	const insets = useSafeAreaInsets()
 
 	return (
@@ -23,5 +23,3 @@ const AuthScreen = () => {
 		</View>
 	)
 }
-
-export default AuthScreen

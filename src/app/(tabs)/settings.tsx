@@ -1,7 +1,7 @@
 import { SignedIn, useClerk } from '@clerk/clerk-expo'
 import { Button, Text, View } from 'react-native'
 
-const SettingsScreen = () => {
+export default function SettingsScreen() {
 	const { signOut, user } = useClerk()
 	const fullName = user?.fullName || 'N/A'
 	const age = (user?.unsafeMetadata?.age as string) || 'N/A'
@@ -17,5 +17,3 @@ const SettingsScreen = () => {
 		</View>
 	)
 }
-
-export default SettingsScreen

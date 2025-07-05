@@ -44,7 +44,7 @@ const formSchema = z.object({
 
 type FormData = z.infer<typeof formSchema>
 
-const CompleteYourAccountScreen = () => {
+export default function CompleteYourAccountScreen() {
 	const { user, isLoaded } = useUser()
 	const [isLoading, setIsLoading] = useState<boolean>(false)
 	const router = useRouter()
@@ -164,5 +164,3 @@ const CompleteYourAccountScreen = () => {
 		</View>
 	)
 }
-
-export default CompleteYourAccountScreen

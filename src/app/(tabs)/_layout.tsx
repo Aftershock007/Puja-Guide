@@ -2,7 +2,6 @@ import { useAuth, useUser } from '@clerk/clerk-expo'
 import { Ionicons } from '@expo/vector-icons'
 import { Redirect, Tabs } from 'expo-router'
 import { Platform } from 'react-native'
-
 import { Colors } from '@/constants/Colors'
 import { useColorScheme } from '@/hooks/useColorScheme'
 import '../../../global.css'
@@ -26,9 +25,16 @@ export default function TabLayout() {
 				headerShown: false,
 				tabBarStyle: Platform.select({
 					ios: {
-						position: 'absolute'
+						position: 'absolute',
+						height: 75,
+						paddingBottom: 5,
+						paddingTop: 5
 					},
-					default: {}
+					default: {
+						height: 60,
+						paddingBottom: 5,
+						paddingTop: 5
+					}
 				})
 			}}
 		>

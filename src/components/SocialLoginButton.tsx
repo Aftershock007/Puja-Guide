@@ -25,7 +25,10 @@ interface SocialLoginButtonProps {
 	onError?: (error: string) => void
 }
 
-const SocialLoginButton = ({ strategy, onError }: SocialLoginButtonProps) => {
+export default function SocialLoginButton({
+	strategy,
+	onError
+}: SocialLoginButtonProps) {
 	const { startSSOFlow } = useSSO()
 	const { user } = useUser()
 	const [isLoading, setIsLoading] = useState(false)
@@ -100,5 +103,3 @@ const SocialLoginButton = ({ strategy, onError }: SocialLoginButtonProps) => {
 		</TouchableOpacity>
 	)
 }
-
-export default SocialLoginButton
