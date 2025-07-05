@@ -30,19 +30,22 @@ export default function HomeScreen() {
 	const [selectedPandal, setSelectedPandal] = useState<Pandal | null>(null)
 	const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false)
 	const pandalDetailsRef = useRef<PandalDetailsRef>(null)
+	const markerPressedRef = useRef(false)
 
 	const handleMarkerPress = (pandal: Pandal) => {
+		markerPressedRef.current = true
 		setSelectedPandal(pandal)
 		setIsBottomSheetVisible(true)
+		setTimeout(() => {
+			markerPressedRef.current = false
+		}, 100)
 	}
-
 	const handleBottomSheetClose = () => {
 		setIsBottomSheetVisible(false)
 		setSelectedPandal(null)
 	}
-
 	const handleMapPress = () => {
-		if (isBottomSheetVisible) {
+		if (!markerPressedRef.current && isBottomSheetVisible) {
 			pandalDetailsRef.current?.closeSheet()
 		}
 	}
@@ -65,7 +68,6 @@ export default function HomeScreen() {
 					/>
 				))}
 			</MapView>
-
 			{selectedPandal && (
 				<PandalDetails
 					isVisible={isBottomSheetVisible}

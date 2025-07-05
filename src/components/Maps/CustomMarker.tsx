@@ -1,4 +1,4 @@
-import { Text, View } from 'react-native'
+import { Text, TouchableOpacity, View } from 'react-native'
 import { Marker } from 'react-native-maps'
 import StarRating from './StarRating'
 
@@ -20,47 +20,54 @@ export default function CustomMarker({
 	onPress,
 	...pandal
 }: CustomMarkerProps) {
-	if (!pandal || typeof pandal.rating !== 'number') {
+	if (!pandal) {
 		return null
 	}
-
-	const validRating = Math.max(0, Math.min(5, pandal.rating || 0))
-
+	const validRating = Math.max(0, Math.min(5, pandal?.rating || 0))
 	const truncateTitle = (title: string, x: number): string => {
 		if (title.length > x) {
 			return `${title.slice(0, x)}...`
 		}
 		return title
 	}
-
-	const displayTitle = truncateTitle(pandal.title, 12)
+	const displayTitle = truncateTitle(pandal?.title, 12)
+	const handlePress = (event: any) => {
+		event.stopPropagation?.()
+		onPress?.()
+	}
 
 	return (
 		<Marker
 			coordinate={{
-				latitude: pandal.latitude || 0,
-				longitude: pandal.longitude || 0
+				latitude: pandal?.latitude || 0,
+				longitude: pandal?.longitude || 0
 			}}
-			key={pandal.id}
-			onPress={onPress}
+			key={pandal?.id}
+			onPress={handlePress}
 		>
-			<View className="items-center">
-				<View className="min-h-[36px] max-w-[120px] gap-0.5 rounded-xl bg-black px-3 py-2">
-					<Text className="text-white">{displayTitle}</Text>
-					<View className="flex-row items-center justify-center gap-1">
-						<StarRating rating={validRating} />
-						<Text
-							adjustsFontSizeToFit={true}
-							className="mb-[1px] text-center font-bold text-white text-xs"
-							minimumFontScale={0.8}
-							numberOfLines={1}
-						>
-							{`(${validRating.toFixed(1)})`}
-						</Text>
+			<TouchableOpacity
+				activeOpacity={0.8}
+				onPress={handlePress}
+				style={{ zIndex: 1000 }}
+			>
+				<View className="items-center">
+					<View className="min-h-[36px] max-w-[120px] gap-0.5 rounded-xl bg-black px-3 py-2">
+						<Text className="text-white">{displayTitle}</Text>
+						<View className="flex-row items-center justify-center gap-1">
+							<StarRating rating={validRating} />
+							<Text
+								adjustsFontSizeToFit={true}
+								className="mb-[1px] text-center font-bold text-white text-xs"
+								minimumFontScale={0.8}
+								numberOfLines={1}
+							>
+								{`(${validRating.toFixed(1)})`}
+							</Text>
+						</View>
 					</View>
+					<View className="-mt-0.5 h-0 w-0 self-center border-t-[10px] border-t-black border-r-[10px] border-r-transparent border-l-[10px] border-l-transparent" />
 				</View>
-				<View className="-mt-0.5 h-0 w-0 self-center border-t-[10px] border-t-black border-r-[10px] border-r-transparent border-l-[10px] border-l-transparent" />
-			</View>
+			</TouchableOpacity>
 		</Marker>
 	)
 }
