@@ -290,8 +290,9 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			const isImageLoading = imageLoadingStates[item] || isTransitioning
 
 			return (
-				<View style={{ width, height, position: 'relative' }}>
+				<View className="relative" style={{ width, height }}>
 					<Image
+						className={isImageLoading ? 'opacity-30' : 'opacity-100'}
 						onError={() => handleImageError(item)}
 						onLoad={() => handleImageLoad(item)}
 						resizeMode="cover"
@@ -299,26 +300,10 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 							uri: item,
 							cache: 'force-cache'
 						}}
-						style={{
-							width,
-							height,
-							opacity: isImageLoading ? 0.3 : 1
-						}}
+						style={{ width, height }}
 					/>
 					{isImageLoading && (
-						<View
-							style={{
-								position: 'absolute',
-								top: 0,
-								left: 0,
-								right: 0,
-								bottom: 0,
-								backgroundColor: 'rgba(255, 255, 255, 0.8)',
-								justifyContent: 'center',
-								alignItems: 'center',
-								borderRadius: 8
-							}}
-						>
+						<View className="absolute inset-0 items-center justify-center rounded-lg bg-white/80">
 							<ActivityIndicator color="black" size="small" />
 						</View>
 					)}
@@ -552,7 +537,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 
 		return (
 			<GestureHandlerRootView
-				className="absolute top-0 right-0 bottom-0 left-0"
+				className="absolute inset-0"
 				style={{ pointerEvents: 'box-none' }}
 			>
 				<BottomSheet
@@ -567,9 +552,9 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 							renderLoader()
 						) : (
 							<Animated.View
+								className="flex-1"
 								style={{
-									opacity: fadeAnim,
-									flex: 1
+									opacity: fadeAnim
 								}}
 							>
 								{isVerticalLayout
