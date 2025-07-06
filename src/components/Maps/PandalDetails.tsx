@@ -2,6 +2,7 @@ import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import {
 	forwardRef,
 	memo,
+	startTransition,
 	useCallback,
 	useEffect,
 	useImperativeHandle,
@@ -70,8 +71,10 @@ export interface PandalDetailsRef {
 }
 
 const LoadingOverlay = memo(() => (
-	<View className="absolute inset-0 items-center justify-center rounded-lg bg-white/80">
-		<ActivityIndicator color="black" size="small" />
+	<View className="absolute inset-0 items-center justify-center bg-gray-100">
+		<View className="rounded-full bg-black/70 p-3">
+			<ActivityIndicator color="white" size="small" />
+		</View>
 	</View>
 ))
 
@@ -94,7 +97,7 @@ const ImageWithLoader = memo<{
 }>(({ item, width, height, isLoading, onLoad, onError }) => (
 	<View className="relative" style={{ width, height }}>
 		<Image
-			className={isLoading ? 'opacity-30' : 'opacity-100'}
+			className={isLoading ? 'opacity-0' : 'opacity-100'}
 			onError={() => onError(item)}
 			onLoad={() => onLoad(item)}
 			resizeMode="cover"
@@ -166,92 +169,194 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 				InteractionManager.runAfterInteractions(() => {
 					for (const imageUrl of pandal.images) {
 						preloadImage(imageUrl).catch(() => {
-							// Preload errors
+							// Image preloading error
 						})
 					}
+					const loadingStates: Record<string, boolean> = {}
+					for (const imageUrl of pandal.images) {
+						const cached = imageCache.get(imageUrl)
+						loadingStates[imageUrl] = !cached?.loaded
+					}
+
+					startTransition(() => {
+						setImageLoadingStates(loadingStates)
+					})
 				})
-				const loadingStates: Record<string, boolean> = {}
-				for (const imageUrl of pandal.images) {
-					const cached = imageCache.get(imageUrl)
-					loadingStates[imageUrl] = !cached?.loaded
-				}
-				setImageLoadingStates(loadingStates)
 			}
 		}, [pandal?.images, isVisible])
 
 		const handleImageLoad = useCallback((imageUrl: string) => {
 			imageCache.set(imageUrl, { loaded: true, error: false })
-			setImageLoadingStates((prev) => ({ ...prev, [imageUrl]: false }))
+			startTransition(() => {
+				setImageLoadingStates((prev) => ({ ...prev, [imageUrl]: false }))
+			})
 		}, [])
 
 		const handleImageError = useCallback((imageUrl: string) => {
 			imageCache.set(imageUrl, { loaded: false, error: true })
-			setImageLoadingStates((prev) => ({ ...prev, [imageUrl]: false }))
+			startTransition(() => {
+				setImageLoadingStates((prev) => ({ ...prev, [imageUrl]: false }))
+			})
 		}, [])
 
 		const updateState = useCallback((updates: Partial<typeof state>) => {
-			setState((prev) => ({ ...prev, ...updates }))
+			startTransition(() => {
+				setState((prev) => ({ ...prev, ...updates }))
+			})
 		}, [])
 
 		const animateToIndex = useCallback(
 			(targetIndex: number, callback?: () => void) => {
-				updateState({ isLoading: true })
-				requestAnimationFrame(() => {
-					setTimeout(() => {
-						Animated.timing(fadeAnim, {
-							toValue: 0.7,
-							duration: 200,
-							useNativeDriver: true
-						}).start(() => {
-							bottomSheetRef.current?.snapToIndex(targetIndex)
+				const currentIsVertical =
+					state.currentSnapIndex >= 2 && !state.forceHorizontalLayout
+				const targetIsVertical =
+					targetIndex >= 2 && !state.forceHorizontalLayout
+
+				if (currentIsVertical !== targetIsVertical) {
+					updateState({ isLoading: true })
+
+					Animated.timing(fadeAnim, {
+						toValue: 0,
+						duration: 150,
+						useNativeDriver: true
+					}).start(() => {
+						requestAnimationFrame(() => {
+							const resetLoadingStates: Record<string, boolean> = {}
+							for (const imageUrl of pandal.images) {
+								const cached = imageCache.get(imageUrl)
+								resetLoadingStates[imageUrl] = !cached?.loaded
+							}
+
+							startTransition(() => {
+								setState((prev) => ({
+									...prev,
+									currentSnapIndex: targetIndex,
+									imageContainerWidth: 0,
+									isTransitioning: true
+								}))
+								setImageLoadingStates(resetLoadingStates)
+							})
+
+							setTimeout(() => {
+								bottomSheetRef.current?.snapToIndex(targetIndex)
+
+								setTimeout(() => {
+									Animated.timing(fadeAnim, {
+										toValue: 1,
+										duration: 250,
+										useNativeDriver: true
+									}).start(() => {
+										updateState({
+											isLoading: false,
+											isTransitioning: false
+										})
+										callback?.()
+									})
+								}, 50)
+							}, 10)
+						})
+					})
+				} else {
+					updateState({ isLoading: true })
+
+					requestAnimationFrame(() => {
+						setTimeout(() => {
 							Animated.timing(fadeAnim, {
-								toValue: 1,
-								duration: 300,
+								toValue: 0.7,
+								duration: 200,
 								useNativeDriver: true
 							}).start(() => {
-								updateState({ isLoading: false })
-								callback?.()
+								bottomSheetRef.current?.snapToIndex(targetIndex)
+								Animated.timing(fadeAnim, {
+									toValue: 1,
+									duration: 300,
+									useNativeDriver: true
+								}).start(() => {
+									updateState({ isLoading: false })
+									callback?.()
+								})
 							})
-						})
-					}, 50)
-				})
+						}, 16)
+					})
+				}
 			},
-			[fadeAnim, updateState]
+			[
+				fadeAnim,
+				updateState,
+				state.currentSnapIndex,
+				state.forceHorizontalLayout,
+				pandal.images
+			]
 		)
 
 		const handleSheetChanges = useCallback(
 			(index: number) => {
+				if (state.isLoading) {
+					return
+				}
+
 				const newIsVerticalLayout = index >= 2 && !state.forceHorizontalLayout
 				const oldIsVerticalLayout =
 					state.currentSnapIndex >= 2 && !state.forceHorizontalLayout
-				const updates: Partial<typeof state> = {
-					isTransitioning: true,
-					currentSnapIndex: index
-				}
-				if (newIsVerticalLayout !== oldIsVerticalLayout) {
-					updates.imageContainerWidth = 0
-					const resetLoadingStates: Record<string, boolean> = {}
-					for (const imageUrl of pandal.images) {
-						const cached = imageCache.get(imageUrl)
-						resetLoadingStates[imageUrl] = !cached?.loaded
-					}
-					setImageLoadingStates(resetLoadingStates)
-				}
-				if (index < 2) {
-					updates.forceHorizontalLayout = false
-				}
+
 				if (index === -1) {
 					onClose()
+					return
 				}
-				updateState(updates)
-				setTimeout(() => updateState({ isTransitioning: false }), 300)
+
+				if (newIsVerticalLayout !== oldIsVerticalLayout) {
+					requestAnimationFrame(() => {
+						const resetLoadingStates: Record<string, boolean> = {}
+						for (const imageUrl of pandal.images) {
+							const cached = imageCache.get(imageUrl)
+							resetLoadingStates[imageUrl] = !cached?.loaded
+						}
+
+						startTransition(() => {
+							setState((prev) => ({
+								...prev,
+								currentSnapIndex: index,
+								isTransitioning: true,
+								imageContainerWidth: 0,
+								forceHorizontalLayout:
+									index < 2 ? false : prev.forceHorizontalLayout
+							}))
+							setImageLoadingStates(resetLoadingStates)
+						})
+
+						Animated.timing(fadeAnim, {
+							toValue: 0.3,
+							duration: 100,
+							useNativeDriver: true
+						}).start(() => {
+							Animated.timing(fadeAnim, {
+								toValue: 1,
+								duration: 150,
+								useNativeDriver: true
+							}).start(() => {
+								updateState({ isTransitioning: false })
+							})
+						})
+					})
+				} else {
+					startTransition(() => {
+						setState((prev) => ({
+							...prev,
+							currentSnapIndex: index,
+							forceHorizontalLayout:
+								index < 2 ? false : prev.forceHorizontalLayout
+						}))
+					})
+				}
 			},
 			[
 				state.currentSnapIndex,
 				state.forceHorizontalLayout,
+				state.isLoading,
 				pandal.images,
 				onClose,
-				updateState
+				updateState,
+				fadeAnim
 			]
 		)
 
@@ -259,13 +364,15 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			if (isVisible) {
 				InteractionManager.runAfterInteractions(() => {
 					bottomSheetRef.current?.expand()
-					setState({
-						currentImageIndex: 0,
-						imageContainerWidth: 0,
-						currentSnapIndex: 1,
-						isLoading: false,
-						forceHorizontalLayout: false,
-						isTransitioning: false
+					startTransition(() => {
+						setState({
+							currentImageIndex: 0,
+							imageContainerWidth: 0,
+							currentSnapIndex: 1,
+							isLoading: false,
+							forceHorizontalLayout: false,
+							isTransitioning: false
+						})
 					})
 					fadeAnim.setValue(1)
 				})
@@ -284,18 +391,27 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		)
 
 		const handleShowLess = useCallback(() => {
-			updateState({
-				forceHorizontalLayout: true,
-				imageContainerWidth: 0
+			requestAnimationFrame(() => {
+				const resetLoadingStates: Record<string, boolean> = {}
+				for (const imageUrl of pandal.images) {
+					const cached = imageCache.get(imageUrl)
+					resetLoadingStates[imageUrl] = !cached?.loaded
+				}
+
+				startTransition(() => {
+					setState((prev) => ({
+						...prev,
+						forceHorizontalLayout: true,
+						imageContainerWidth: 0
+					}))
+					setImageLoadingStates(resetLoadingStates)
+				})
+
+				setTimeout(() => {
+					animateToIndex(1)
+				}, 20)
 			})
-			const resetLoadingStates: Record<string, boolean> = {}
-			for (const imageUrl of pandal.images) {
-				const cached = imageCache.get(imageUrl)
-				resetLoadingStates[imageUrl] = !cached?.loaded
-			}
-			setImageLoadingStates(resetLoadingStates)
-			animateToIndex(1)
-		}, [animateToIndex, pandal.images, updateState])
+		}, [animateToIndex, pandal.images])
 
 		const onScroll = useCallback(
 			(event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -391,7 +507,20 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 					: description
 			}
 
+			const needsActionButton = () => {
+				if (computedValues.isDescriptionExpandedMore) {
+					return true
+				}
+				if (computedValues.isDescriptionExpanded) {
+					return description.length > 130
+				}
+				return description.length > 60
+			}
+
 			const getActionText = () => {
+				if (!needsActionButton()) {
+					return ''
+				}
 				if (computedValues.isDescriptionExpandedMore) {
 					return ' Show less'
 				}
@@ -610,7 +739,13 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 								<Text className="mt-3 text-black text-sm">Loading...</Text>
 							</View>
 						) : (
-							<Animated.View className="flex-1" style={{ opacity: fadeAnim }}>
+							<Animated.View
+								className="flex-1"
+								style={{
+									opacity: fadeAnim,
+									display: state.isTransitioning ? 'none' : 'flex'
+								}}
+							>
 								{computedValues.isVerticalLayout
 									? renderVerticalLayout()
 									: renderHorizontalLayout()}
