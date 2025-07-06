@@ -57,13 +57,9 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		const [currentSnapIndex, setCurrentSnapIndex] = useState(1)
 		const [isLoading, setIsLoading] = useState(false)
 		const [forceHorizontalLayout, setForceHorizontalLayout] = useState(false)
-
-		// ✅ FIX 1: Persist loading states across layout changes
 		const [imageLoadingStates, setImageLoadingStates] = useState<{
 			[key: string]: boolean
 		}>({})
-		const [loadedImages, setLoadedImages] = useState<Set<string>>(new Set())
-
 		const [isTransitioning, setIsTransitioning] = useState(false)
 
 		const fadeAnim = useRef(new Animated.Value(1)).current
@@ -72,10 +68,12 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		const isVerticalLayout = currentSnapIndex >= 2 && !forceHorizontalLayout
 
 		const imageWidth = useMemo(() => {
-			return (
-				imageContainerWidth - 0.1 || (screenWidth - paddingHorizontal) * 0.4
-			)
-		}, [imageContainerWidth, screenWidth])
+			if (isVerticalLayout) {
+				return imageContainerWidth || screenWidth - paddingHorizontal
+			}
+			const availableWidth = screenWidth - paddingHorizontal
+			return imageContainerWidth || availableWidth * 0.4
+		}, [imageContainerWidth, screenWidth, isVerticalLayout])
 
 		useImperativeHandle(
 			ref,
@@ -87,20 +85,17 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			[]
 		)
 
-		// ✅ FIX 2: Only reset loading states when pandal changes, not layout
 		useEffect(() => {
 			if (pandal?.images) {
 				const initialLoadingStates: { [key: string]: boolean } = {}
-				pandal.images.forEach((imageUrl) => {
-					// Only show loading if image hasn't been loaded before
-					initialLoadingStates[imageUrl] = !loadedImages.has(imageUrl)
-				})
+				for (const imageUrl of pandal.images) {
+					initialLoadingStates[imageUrl] = true
+				}
 				setImageLoadingStates(initialLoadingStates)
 			}
-		}, [pandal?.id]) // ✅ Only depend on pandal ID, not layout
+		}, [pandal?.images])
 
 		const handleImageLoad = useCallback((imageUrl: string) => {
-			setLoadedImages((prev) => new Set(prev).add(imageUrl))
 			setImageLoadingStates((prev) => ({
 				...prev,
 				[imageUrl]: false
@@ -117,11 +112,20 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		const handleSheetChanges = useCallback(
 			(index: number) => {
 				setIsTransitioning(true)
+				const newIsVerticalLayout = index >= 2 && !forceHorizontalLayout
+				const oldIsVerticalLayout =
+					currentSnapIndex >= 2 && !forceHorizontalLayout
 				setCurrentSnapIndex(index)
-
-				// ✅ FIX 3: Remove unnecessary loading state reset on layout change
-				// Removed the problematic reset logic here
-
+				if (newIsVerticalLayout !== oldIsVerticalLayout) {
+					setImageContainerWidth(0)
+					if (pandal?.images) {
+						const resetLoadingStates: { [key: string]: boolean } = {}
+						for (const imageUrl of pandal.images) {
+							resetLoadingStates[imageUrl] = true
+						}
+						setImageLoadingStates(resetLoadingStates)
+					}
+				}
 				if (index < 2 && isDescriptionExpanded) {
 					setIsDescriptionExpanded(false)
 					setIsDescriptionExpandedMore(false)
@@ -144,12 +148,17 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 				if (index === -1) {
 					onClose()
 				}
-
 				setTimeout(() => {
 					setIsTransitioning(false)
 				}, 300)
 			},
-			[onClose, isDescriptionExpanded]
+			[
+				onClose,
+				isDescriptionExpanded,
+				currentSnapIndex,
+				forceHorizontalLayout,
+				pandal?.images
+			]
 		)
 
 		useEffect(() => {
@@ -163,6 +172,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 				fadeAnim.setValue(1)
 				setIsLoading(false)
 				setIsTransitioning(false)
+				setImageContainerWidth(0) // Reset width on visibility change
 			} else {
 				bottomSheetRef.current?.close()
 			}
@@ -219,6 +229,19 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			setIsDescriptionExpanded(false)
 			setIsDescriptionExpandedMore(false)
 			setForceHorizontalLayout(true)
+
+			// Reset container width to force recalculation for horizontal layout
+			setImageContainerWidth(0)
+
+			// Reset image loading states when switching to horizontal layout
+			if (pandal?.images) {
+				const resetLoadingStates: { [key: string]: boolean } = {}
+				for (const imageUrl of pandal.images) {
+					resetLoadingStates[imageUrl] = true
+				}
+				setImageLoadingStates(resetLoadingStates)
+			}
+
 			Animated.timing(fadeAnim, {
 				toValue: 0.7,
 				duration: 200,
@@ -233,7 +256,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 					setIsLoading(false)
 				})
 			})
-		}, [fadeAnim])
+		}, [fadeAnim, pandal?.images])
 
 		const onScroll = useCallback(
 			(event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -255,64 +278,56 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			[screenWidth]
 		)
 
-		// ✅ FIX 4: Memoize image component to prevent unnecessary re-renders
-		const renderImageWithLoader = useCallback(
-			({
-				item,
-				width,
-				height
-			}: {
-				item: string
-				width: number
-				height: number
-			}) => {
-				const isImageLoading =
-					imageLoadingStates[item] && !loadedImages.has(item)
+		const renderImageWithLoader = ({
+			item,
+			width,
+			height
+		}: {
+			item: string
+			width: number
+			height: number
+		}) => {
+			const isImageLoading = imageLoadingStates[item] || isTransitioning
 
-				return (
-					<View style={{ width, height, position: 'relative' }}>
-						<Image
-							onError={() => handleImageError(item)}
-							onLoad={() => handleImageLoad(item)}
-							resizeMode="cover"
-							source={{
-								uri: item,
-								cache: 'force-cache'
-							}}
+			return (
+				<View style={{ width, height, position: 'relative' }}>
+					<Image
+						onError={() => handleImageError(item)}
+						onLoad={() => handleImageLoad(item)}
+						resizeMode="cover"
+						source={{
+							uri: item,
+							cache: 'force-cache'
+						}}
+						style={{
+							width,
+							height,
+							opacity: isImageLoading ? 0.3 : 1
+						}}
+					/>
+					{isImageLoading && (
+						<View
 							style={{
-								width,
-								height,
-								opacity: isImageLoading ? 0.3 : 1
+								position: 'absolute',
+								top: 0,
+								left: 0,
+								right: 0,
+								bottom: 0,
+								backgroundColor: 'rgba(255, 255, 255, 0.8)',
+								justifyContent: 'center',
+								alignItems: 'center',
+								borderRadius: 8
 							}}
-						/>
-						{isImageLoading && (
-							<View
-								style={{
-									position: 'absolute',
-									top: 0,
-									left: 0,
-									right: 0,
-									bottom: 25,
-									backgroundColor: 'white',
-									justifyContent: 'center',
-									alignItems: 'center',
-									borderRadius: 8
-								}}
-							>
-								<ActivityIndicator color="black" size="small" />
-							</View>
-						)}
-					</View>
-				)
-			},
-			[imageLoadingStates, loadedImages, handleImageLoad, handleImageError]
-		)
+						>
+							<ActivityIndicator color="black" size="small" />
+						</View>
+					)}
+				</View>
+			)
+		}
 
-		const renderImage = useCallback(
-			({ item }: { item: string }) =>
-				renderImageWithLoader({ item, width: imageWidth, height: 200 }),
-			[renderImageWithLoader, imageWidth]
-		)
+		const renderImage = ({ item }: { item: string }) =>
+			renderImageWithLoader({ item, width: imageWidth, height: 200 })
 
 		const onImageContainerLayout = (event: LayoutChangeEvent) => {
 			const { width } = event.nativeEvent.layout
@@ -424,8 +439,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 										index
 									})}
 									horizontal
-									// ✅ FIX 5: Use consistent keys across layouts
-									keyExtractor={(item, index) => `image-${pandal.id}-${index}`}
+									keyExtractor={(_, index) => `image-vertical-${index}`}
 									onScroll={onVerticalScroll}
 									pagingEnabled
 									removeClippedSubviews={false}
@@ -491,8 +505,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 									index
 								})}
 								horizontal
-								// ✅ FIX 5: Use consistent keys across layouts
-								keyExtractor={(item, index) => `image-${pandal.id}-${index}`}
+								keyExtractor={(_, index) => `image-horizontal-${index}`}
 								onScroll={onScroll}
 								pagingEnabled
 								removeClippedSubviews={false}
