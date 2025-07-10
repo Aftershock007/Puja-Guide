@@ -1,18 +1,9 @@
 import { Text, TouchableOpacity, View } from 'react-native'
 import { Marker } from 'react-native-maps'
+import type { Pandals } from '@/types/types'
 import StarRating from './StarRating'
 
-interface Pandal {
-	id: string
-	latitude: number
-	longitude: number
-	title: string
-	description: string
-	rating: number
-	images: string[]
-}
-
-interface CustomMarkerProps extends Pandal {
+interface CustomMarkerProps extends Pandals {
 	onPress?: () => void
 }
 
@@ -24,13 +15,9 @@ export default function CustomMarker({
 		return null
 	}
 	const validRating = Math.max(0, Math.min(5, pandal?.rating || 0))
-	const truncateTitle = (title: string, x: number): string => {
-		if (title.length > x) {
-			return `${title.slice(0, x)}...`
-		}
-		return title
-	}
-	const displayTitle = truncateTitle(pandal?.title, 12)
+	const truncateTitle = (title: string, x: number): string =>
+		title?.length > x ? `${title.slice(0, x).trimEnd()}...` : title
+	const displayTitle = truncateTitle(pandal?.clubname, 15)
 	const handlePress = (event: any) => {
 		event.stopPropagation?.()
 		onPress?.()
@@ -51,9 +38,9 @@ export default function CustomMarker({
 				style={{ zIndex: 1000 }}
 			>
 				<View className="items-center">
-					<View className="min-h-[36px] max-w-[120px] gap-0.5 rounded-xl bg-black px-3 py-2">
+					<View className="min-h-[36px] max-w-[150px] gap-0.5 rounded-xl bg-black px-3 py-2">
 						<Text className="text-white">{displayTitle}</Text>
-						<View className="flex-row items-center justify-center gap-1">
+						<View className="flex-row items-center justify-start gap-1">
 							<StarRating rating={validRating} />
 							<Text
 								adjustsFontSizeToFit={true}

@@ -23,9 +23,10 @@ import {
 	View
 } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
+import type { Pandals } from '@/types/types'
+import { truncateText } from '@/utils/truncateText'
 import StarRating from './StarRating'
 
-const TRAILING_PUNCTUATION_REGEX = /[.,!?;:]+$/
 const SCREEN_WIDTH = Dimensions.get('window').width
 const PADDING_HORIZONTAL = 35
 const AVAILABLE_WIDTH = SCREEN_WIDTH - PADDING_HORIZONTAL
@@ -50,18 +51,8 @@ const preloadImage = (uri: string): Promise<void> => {
 	})
 }
 
-interface Pandal {
-	id: string
-	latitude: number
-	longitude: number
-	title: string
-	description: string
-	rating: number
-	images: string[]
-}
-
 interface PandalDetailsProps {
-	pandal: Pandal
+	pandal: Pandals
 	isVisible: boolean
 	onClose: () => void
 }
@@ -71,10 +62,8 @@ export interface PandalDetailsRef {
 }
 
 const LoadingOverlay = memo(() => (
-	<View className="absolute inset-0 items-center justify-center bg-gray-100">
-		<View className="rounded-full bg-black/70 p-3">
-			<ActivityIndicator color="white" size="small" />
-		</View>
+	<View className="absolute top-0 right-0 bottom-10 left-0 items-center justify-center">
+		<ActivityIndicator color="black" size="small" />
 	</View>
 ))
 
@@ -167,13 +156,13 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		useEffect(() => {
 			if (pandal?.images && isVisible) {
 				InteractionManager.runAfterInteractions(() => {
-					for (const imageUrl of pandal.images) {
+					for (const imageUrl of pandal.images || []) {
 						preloadImage(imageUrl).catch(() => {
 							// Image preloading error
 						})
 					}
 					const loadingStates: Record<string, boolean> = {}
-					for (const imageUrl of pandal.images) {
+					for (const imageUrl of pandal.images || []) {
 						const cached = imageCache.get(imageUrl)
 						loadingStates[imageUrl] = !cached?.loaded
 					}
@@ -222,7 +211,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 					}).start(() => {
 						requestAnimationFrame(() => {
 							const resetLoadingStates: Record<string, boolean> = {}
-							for (const imageUrl of pandal.images) {
+							for (const imageUrl of pandal.images || []) {
 								const cached = imageCache.get(imageUrl)
 								resetLoadingStates[imageUrl] = !cached?.loaded
 							}
@@ -307,7 +296,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 				if (newIsVerticalLayout !== oldIsVerticalLayout) {
 					requestAnimationFrame(() => {
 						const resetLoadingStates: Record<string, boolean> = {}
-						for (const imageUrl of pandal.images) {
+						for (const imageUrl of pandal.images || []) {
 							const cached = imageCache.get(imageUrl)
 							resetLoadingStates[imageUrl] = !cached?.loaded
 						}
@@ -393,7 +382,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		const handleShowLess = useCallback(() => {
 			requestAnimationFrame(() => {
 				const resetLoadingStates: Record<string, boolean> = {}
-				for (const imageUrl of pandal.images) {
+				for (const imageUrl of pandal.images || []) {
 					const cached = imageCache.get(imageUrl)
 					resetLoadingStates[imageUrl] = !cached?.loaded
 				}
@@ -460,12 +449,12 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		)
 
 		const renderPaginationDots = useCallback(() => {
-			if (pandal.images.length <= 1) {
+			if ((pandal.images || []).length <= 1) {
 				return null
 			}
 			return (
 				<View className="absolute right-3 bottom-2 left-0 flex-row justify-end">
-					{pandal.images.map((imageUrl, index) => (
+					{(pandal.images || []).map((imageUrl, index) => (
 						<PaginationDot
 							imageUrl={imageUrl}
 							isActive={index === state.currentImageIndex}
@@ -478,20 +467,6 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 
 		const processedDescription = useMemo(() => {
 			const { description } = pandal
-			const sliceTextAtWordBoundary = (
-				text: string,
-				maxLength: number
-			): string => {
-				if (text.length <= maxLength) {
-					return text
-				}
-				let sliced = text.slice(0, maxLength)
-				const lastSpaceIndex = sliced.lastIndexOf(' ')
-				if (lastSpaceIndex > 0) {
-					sliced = sliced.slice(0, lastSpaceIndex)
-				}
-				return sliced.trim().replace(TRAILING_PUNCTUATION_REGEX, '')
-			}
 
 			const getDescriptionText = () => {
 				if (computedValues.isDescriptionExpandedMore) {
@@ -499,11 +474,11 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 				}
 				if (computedValues.isDescriptionExpanded) {
 					return description.length > 130
-						? `${sliceTextAtWordBoundary(description, 130)}...`
+						? `${truncateText(description, 130)}...`
 						: description
 				}
 				return description.length > 60
-					? `${sliceTextAtWordBoundary(description, 60)}...`
+					? `${truncateText(description, 60)}...`
 					: description
 			}
 
@@ -628,11 +603,11 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 								updateState({ imageContainerWidth: e.nativeEvent.layout.width })
 							}
 						>
-							{pandal.images.length > 1 ? (
+							{(pandal.images || []).length > 1 ? (
 								<>
 									<FlatList ref={flatListRef} {...flatListProps} />
 									<View className="absolute right-3 bottom-3 flex-row">
-										{pandal.images.map((imageUrl, index) => (
+										{(pandal.images || []).map((imageUrl, index) => (
 											<PaginationDot
 												imageUrl={imageUrl}
 												isActive={index === state.currentImageIndex}
@@ -643,14 +618,14 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 								</>
 							) : (
 								renderImageWithLoader(
-									pandal.images[0],
+									(pandal.images || [])[0],
 									imageDimensions.vertical.width,
 									imageDimensions.vertical.height
 								)
 							)}
-							<View className="absolute right-0 bottom-0 left-0 p-6">
+							<View className="absolute right-0 bottom-0 left-0 p-4">
 								<Text className="font-bold text-2xl text-white leading-tight">
-									{pandal.title}
+									{pandal.clubname}
 								</Text>
 							</View>
 						</View>
@@ -682,14 +657,14 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 							updateState({ imageContainerWidth: e.nativeEvent.layout.width })
 						}
 					>
-						{pandal.images.length > 1 ? (
+						{(pandal.images || []).length > 1 ? (
 							<>
 								<FlatList ref={flatListRef} {...flatListProps} />
 								{renderPaginationDots()}
 							</>
 						) : (
 							renderImageWithLoader(
-								pandal.images[0],
+								(pandal.images || [])[0],
 								imageDimensions.horizontal.width,
 								imageDimensions.horizontal.height
 							)
@@ -697,7 +672,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 					</View>
 					<View className="flex-1 justify-center bg-black p-6">
 						<Text className="mb-3 font-bold text-white text-xl leading-tight">
-							{pandal.title}
+							{pandal.clubname}
 						</Text>
 						{renderDescription()}
 						{renderRatingSection()}

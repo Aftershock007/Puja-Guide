@@ -1,19 +1,10 @@
-import { useRef, useState } from 'react'
-import { View } from 'react-native'
+import { useEffect, useRef, useState } from 'react'
+import { ActivityIndicator, Text, View } from 'react-native'
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps'
 import CustomMarker from '@/components/Maps/CustomMarker'
 import PandalDetails from '@/components/Maps/PandalDetails'
-import pandals from '../../assets/data/pandals.json' with { type: 'json' }
-
-interface Pandal {
-	id: string
-	latitude: number
-	longitude: number
-	title: string
-	description: string
-	rating: number
-	images: string[]
-}
+import { supabase } from '@/lib/supabase'
+import type { Pandals } from '@/types/types'
 
 interface PandalDetailsRef {
 	closeSheet: () => void
@@ -22,15 +13,47 @@ interface PandalDetailsRef {
 const INITIAL_REGION = {
 	latitude: 22.686_497,
 	longitude: 88.434_997,
-	latitudeDelta: 0.0922,
-	longitudeDelta: 0.0421
+	latitudeDelta: 0.1,
+	longitudeDelta: 0.1
 }
 
 export default function HomeScreen() {
-	const [selectedPandal, setSelectedPandal] = useState<Pandal | null>(null)
+	const [pandals, setPandals] = useState<Pandals[]>([])
+	const [selectedPandal, setSelectedPandal] = useState<Pandals | null>(null)
 	const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false)
+	const [loading, setLoading] = useState(true)
+	const [error, setError] = useState<string | null>(null)
 	const pandalDetailsRef = useRef<PandalDetailsRef>(null)
 	const markerPressedRef = useRef(false)
+
+	useEffect(() => {
+		const fetchPandals = async () => {
+			try {
+				setLoading(true)
+				setError(null)
+
+				const { data, error: supabaseError } = await supabase
+					.from('pandals')
+					.select('*')
+
+				if (supabaseError) {
+					setError('Failed to fetch pandals')
+					return
+				}
+				if (data) {
+					setPandals(data)
+				} else {
+					setPandals([])
+				}
+			} catch {
+				setError('Failed to fetch pandals')
+			} finally {
+				setLoading(false)
+			}
+		}
+
+		fetchPandals()
+	}, [])
 
 	const handleMarkerPress = (pandal: Pandal) => {
 		markerPressedRef.current = true
@@ -40,14 +63,39 @@ export default function HomeScreen() {
 			markerPressedRef.current = false
 		}, 100)
 	}
+
 	const handleBottomSheetClose = () => {
 		setIsBottomSheetVisible(false)
 		setSelectedPandal(null)
 	}
+
 	const handleMapPress = () => {
 		if (!markerPressedRef.current && isBottomSheetVisible) {
 			pandalDetailsRef.current?.closeSheet()
 		}
+	}
+
+	if (loading) {
+		return (
+			<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+				<ActivityIndicator color="black" size="large" />
+				<Text style={{ marginTop: 10 }}>Loading pandals...</Text>
+			</View>
+		)
+	}
+
+	if (error) {
+		return (
+			<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+				<Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text>
+				<Text
+					onPress={() => window.location.reload()}
+					style={{ color: 'blue' }}
+				>
+					Tap to retry
+				</Text>
+			</View>
+		)
 	}
 
 	return (
