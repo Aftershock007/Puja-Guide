@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
+    "start": "expo start -- --clear",
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.14.1",
+    "@dev-plugins/react-query": "^0.3.1",
     "@gorhom/bottom-sheet": "^5.1.6",
     "@hookform/resolvers": "^5.1.1",
     "@react-native-async-storage/async-storage": "2.1.2",

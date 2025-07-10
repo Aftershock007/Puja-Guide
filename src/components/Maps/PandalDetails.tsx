@@ -467,6 +467,9 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 
 		const processedDescription = useMemo(() => {
 			const { description } = pandal
+			if (!description) {
+				return
+			}
 
 			const getDescriptionText = () => {
 				if (computedValues.isDescriptionExpandedMore) {
@@ -567,13 +570,13 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			() => (
 				<View className="mb-4">
 					<Text className="text-sm text-white leading-relaxed">
-						{processedDescription.text}
+						{processedDescription?.text}
 						<Text
 							className="font-medium text-blue-400"
 							disabled={state.isLoading}
-							onPress={processedDescription.actionHandler}
+							onPress={processedDescription?.actionHandler}
 						>
-							{processedDescription.actionText}
+							{processedDescription?.actionText}
 						</Text>
 					</Text>
 				</View>
@@ -584,10 +587,14 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		const renderRatingSection = useCallback(
 			() => (
 				<View className="flex-row items-center gap-2">
-					<StarRating rating={pandal.rating} />
-					<Text className="font-semibold text-sm text-white">
-						{pandal.rating.toFixed(1)}
-					</Text>
+					{pandal.rating && (
+						<>
+							<StarRating rating={pandal.rating} />
+							<Text className="font-semibold text-sm text-white">
+								{pandal.rating.toFixed(1)}
+							</Text>
+						</>
+					)}
 				</View>
 			),
 			[pandal.rating]

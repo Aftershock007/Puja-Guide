@@ -11,22 +11,25 @@ import { useEffect } from 'react'
 import 'react-native-reanimated'
 import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo'
 import { tokenCache } from '@clerk/clerk-expo/token-cache'
+import { useReactQueryDevTools } from '@dev-plugins/react-query'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useColorScheme } from '@/hooks/useColorScheme'
 
 preventAutoHideAsync()
+
+const queryClient = new QueryClient()
 
 export default function RootLayout() {
 	const colorScheme = useColorScheme()
 	const [loaded] = useFonts({
 		openSans: require('../assets/fonts/OpenSans-Regular.ttf')
 	})
-
+	useReactQueryDevTools(queryClient)
 	useEffect(() => {
 		if (loaded) {
 			hideAsync()
 		}
 	}, [loaded])
-
 	if (!loaded) {
 		return null
 	}
@@ -36,18 +39,20 @@ export default function RootLayout() {
 	}
 
 	return (
-		<ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-			<ClerkLoaded>
-				<ThemeProvider
-					value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
-				>
-					<Stack>
-						<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-						<Stack.Screen name="auth" options={{ headerShown: false }} />
-					</Stack>
-					<StatusBar style="auto" />
-				</ThemeProvider>
-			</ClerkLoaded>
-		</ClerkProvider>
+		<QueryClientProvider client={queryClient}>
+			<ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+				<ClerkLoaded>
+					<ThemeProvider
+						value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}
+					>
+						<Stack>
+							<Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+							<Stack.Screen name="auth" options={{ headerShown: false }} />
+						</Stack>
+						<StatusBar style="auto" />
+					</ThemeProvider>
+				</ClerkLoaded>
+			</ClerkProvider>
+		</QueryClientProvider>
 	)
 }
