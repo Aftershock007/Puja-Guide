@@ -1,10 +1,16 @@
 import { useUser } from '@clerk/clerk-expo'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native'
+import {
+	ActivityIndicator,
+	Alert,
+	Text,
+	TouchableOpacity,
+	View
+} from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { z } from 'zod'
 import RadioButtonInput from '@/components/Forms/RadioButtonInput'
@@ -17,6 +23,7 @@ import {
 } from '@/constants/GenderEnum'
 import { completeDetailsPageHeader } from '@/constants/Headings'
 import useSupabase from '@/lib/supabase'
+import { insertUsers } from '@/service/insertUserService'
 import type { Users } from '@/types/types'
 
 const formSchema = z.object({
@@ -46,6 +53,7 @@ export default function CompleteYourAccountScreen() {
 	const router = useRouter()
 	const insets = useSafeAreaInsets()
 	const supabase = useSupabase()
+	const queryClient = useQueryClient()
 
 	const {
 		control,
@@ -60,15 +68,14 @@ export default function CompleteYourAccountScreen() {
 	})
 
 	const { mutate, isPending } = useMutation({
-		mutationFn: async (userData: Users) => {
-			const { data, error } = await supabase
-				.from('users')
-				.insert(userData)
-				.select()
-			if (error) {
-				throw error
-			}
-			return data
+		mutationFn: (userData: Users) => {
+			return insertUsers(supabase, userData)
+		},
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['users'] })
+		},
+		onError: () => {
+			Alert.alert('Failed to insert user')
 		}
 	})
 
