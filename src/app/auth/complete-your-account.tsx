@@ -65,17 +65,11 @@ export default function CompleteYourAccountScreen() {
 			}
 		})
 
-	const updateUserMutation = useMutation({
+	const { mutate, isPending } = useMutation({
 		mutationFn: async (userData: Users) => {
 			const { data, error } = await supabase
 				.from('users')
-				.insert({
-					id: userData?.id,
-					name: userData?.name,
-					email: userData?.email,
-					gender: userData?.gender,
-					age: userData?.age
-				})
+				.insert(userData)
 				.select()
 			if (error) {
 				throw error
@@ -99,9 +93,9 @@ export default function CompleteYourAccountScreen() {
 				}
 			})
 			await user?.reload()
-			await updateUserMutation.mutateAsync({
+			mutate({
 				id: user?.id || '',
-				name: full_name,
+				name: user?.fullName || '',
 				email: user?.primaryEmailAddress?.emailAddress || '',
 				age: Number(age),
 				gender
@@ -186,7 +180,7 @@ export default function CompleteYourAccountScreen() {
 								isLoading || !isValid ? 'text-gray-600' : 'text-white'
 							}`}
 						>
-							{isLoading ? 'Loading...' : 'Complete Account'}
+							{isLoading || isPending ? 'Loading...' : 'Complete Account'}
 						</Text>
 					</TouchableOpacity>
 				</View>
