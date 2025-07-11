@@ -2,7 +2,7 @@ import { useUser } from '@clerk/clerk-expo'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
@@ -22,48 +22,42 @@ import type { Users } from '@/types/types'
 const formSchema = z.object({
 	full_name: z
 		.string()
-		.min(1, 'Name is required')
 		.min(2, 'Name must be at least 2 characters')
 		.max(100, 'Name must be less than 100 characters'),
 	age: z
 		.string()
 		.min(1, 'Age is required')
-		.refine((val) => !Number.isNaN(Number(val)), {
-			message: 'Age must be a valid number'
-		})
-		.refine((val) => Number(val) > 0, {
-			message: 'Age must be greater than 0'
-		})
-		.refine((val) => Number(val) <= 99, {
-			message: 'Age must be less than 100'
-		})
-		.refine((val) => Number.isInteger(Number(val)), {
-			message: 'Age must be a whole number'
-		}),
-	gender: z.enum(GENDER_VALUES, {
-		required_error: 'Please select a gender'
-	})
+		.refine(
+			(val) => {
+				const num = Number(val)
+				return (
+					!Number.isNaN(num) && Number.isInteger(num) && num > 0 && num <= 99
+				)
+			},
+			{ message: 'Age must be a whole number between 1 and 99' }
+		),
+	gender: z.enum(GENDER_VALUES, { required_error: 'Please select a gender' })
 })
 
 type FormData = z.infer<typeof formSchema>
 
 export default function CompleteYourAccountScreen() {
 	const { user, isLoaded } = useUser()
-	const [isLoading, setIsLoading] = useState<boolean>(false)
 	const router = useRouter()
 	const insets = useSafeAreaInsets()
 	const supabase = useSupabase()
 
-	const { control, handleSubmit, setError, setValue, formState } =
-		useForm<FormData>({
-			resolver: zodResolver(formSchema),
-			mode: 'onChange',
-			defaultValues: {
-				full_name: '',
-				age: '',
-				gender: undefined
-			}
-		})
+	const {
+		control,
+		handleSubmit,
+		setError,
+		setValue,
+		formState: { isValid }
+	} = useForm<FormData>({
+		resolver: zodResolver(formSchema),
+		mode: 'onChange',
+		defaultValues: { full_name: '', age: '', gender: undefined }
+	})
 
 	const { mutate, isPending } = useMutation({
 		mutationFn: async (userData: Users) => {
@@ -78,19 +72,11 @@ export default function CompleteYourAccountScreen() {
 		}
 	})
 
-	const { isValid } = formState
-
-	const onSubmit = async (data: FormData): Promise<void> => {
+	const onSubmit = async (data: FormData) => {
 		const { full_name, age, gender } = data
 		try {
-			setIsLoading(true)
 			await user?.update({
-				unsafeMetadata: {
-					full_name,
-					age,
-					gender,
-					onboarding_completed: true
-				}
+				unsafeMetadata: { full_name, age, gender, onboarding_completed: true }
 			})
 			await user?.reload()
 			mutate({
@@ -100,14 +86,12 @@ export default function CompleteYourAccountScreen() {
 				age: Number(age),
 				gender
 			})
-			return router.push('/(tabs)')
-		} catch (_error: unknown) {
-			return setError('root', {
+			router.push('/(tabs)')
+		} catch {
+			setError('root', {
 				message:
 					'Oops! Something went wrong while setting up your account. Please try again.'
 			})
-		} finally {
-			setIsLoading(false)
 		}
 	}
 
@@ -115,19 +99,20 @@ export default function CompleteYourAccountScreen() {
 		if (!(isLoaded && user)) {
 			return
 		}
-		setValue('full_name', user?.fullName || '')
-
-		const userAge = user?.unsafeMetadata?.age
+		setValue('full_name', user.fullName || '')
 		setValue(
 			'age',
-			userAge !== undefined && userAge !== null ? String(userAge) : ''
+			user.unsafeMetadata?.age ? String(user.unsafeMetadata.age) : ''
 		)
-
-		const userGender = String(user?.unsafeMetadata?.gender)
+		const userGender = String(user.unsafeMetadata?.gender)
 		if (isValidGender(userGender)) {
 			setValue('gender', userGender)
 		}
 	}, [isLoaded, user, setValue])
+
+	const isDisabled = isPending || !isValid
+	const buttonStyle = isDisabled ? 'bg-gray-400 opacity-50' : 'bg-black'
+	const textStyle = isDisabled ? 'text-gray-600' : 'text-white'
 
 	return (
 		<View
@@ -164,23 +149,13 @@ export default function CompleteYourAccountScreen() {
 				/>
 				<View className="mt-5">
 					<TouchableOpacity
-						className={`w-full flex-row items-center justify-center gap-2.5 rounded-lg p-2.5 ${
-							isLoading || !isValid
-								? 'bg-gray-400 opacity-50'
-								: 'bg-black opacity-100'
-						}`}
-						disabled={isLoading || !isValid}
+						className={`w-full flex-row items-center justify-center gap-2.5 rounded-lg p-2.5 ${buttonStyle}`}
+						disabled={isDisabled}
 						onPress={handleSubmit(onSubmit)}
 					>
-						{isLoading ? (
-							<ActivityIndicator color="white" size="small" />
-						) : null}
-						<Text
-							className={`${
-								isLoading || !isValid ? 'text-gray-600' : 'text-white'
-							}`}
-						>
-							{isLoading || isPending ? 'Loading...' : 'Complete Account'}
+						{isPending && <ActivityIndicator color="white" size="small" />}
+						<Text className={textStyle}>
+							{isPending ? 'Loading...' : 'Complete Account'}
 						</Text>
 					</TouchableOpacity>
 				</View>
