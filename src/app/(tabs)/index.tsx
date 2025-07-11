@@ -1,10 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { ActivityIndicator, Text, View } from 'react-native'
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps'
 import CustomMarker from '@/components/Maps/CustomMarker'
 import PandalDetails from '@/components/Maps/PandalDetails'
-import { supabase } from '@/lib/supabase'
+import useSupabase from '@/lib/supabase'
+import { fetchPandals } from '@/service/fetchPandalService'
 import type { Pandals } from '@/types/types'
 
 interface PandalDetailsRef {
@@ -18,19 +19,12 @@ const INITIAL_REGION = {
 	longitudeDelta: 0.1
 }
 
-const fetchPandals = async () => {
-	const { data, error } = await supabase.from('pandals').select('*')
-	if (error) {
-		throw error
-	}
-	return data
-}
-
 export default function HomeScreen() {
 	const [selectedPandal, setSelectedPandal] = useState<Pandals | null>(null)
 	const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false)
 	const pandalDetailsRef = useRef<PandalDetailsRef>(null)
 	const markerPressedRef = useRef(false)
+	const supabase = useSupabase()
 
 	const {
 		data: pandals,
@@ -38,7 +32,7 @@ export default function HomeScreen() {
 		error
 	} = useQuery({
 		queryKey: ['pandals'],
-		queryFn: () => fetchPandals()
+		queryFn: () => fetchPandals(supabase)
 	})
 
 	const handleMarkerPress = (pandal: Pandals) => {

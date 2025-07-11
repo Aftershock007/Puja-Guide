@@ -1,3 +1,4 @@
+import { useUser } from '@clerk/clerk-expo'
 import { Text, TouchableOpacity, View } from 'react-native'
 import { Marker } from 'react-native-maps'
 import type { Pandals } from '@/types/types'

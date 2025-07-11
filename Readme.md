@@ -9,7 +9,7 @@
 - Find nearest pandal and give a shortest route using AI
 - Search pandals
 - Animated Splash Screen
-- Add guide access who can add pandals
+- Add GUIDE access who can add pandals (1:56:32)
 
 # Tables
 1. Users table
@@ -79,8 +79,8 @@
 
     CREATE TABLE user_favourites (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        pandal_id INTEGER NOT NULL REFERENCES pandals(id) ON DELETE CASCADE,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        pandal_id UUID NOT NULL REFERENCES pandals(id) ON DELETE CASCADE,
         UNIQUE (user_id, pandal_id)
     );
 
@@ -99,8 +99,8 @@
 
     CREATE TABLE user_visited (
         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-        pandal_id INTEGER NOT NULL REFERENCES pandals(id) ON DELETE CASCADE,
+        user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        pandal_id UUID NOT NULL REFERENCES pandals(id) ON DELETE CASCADE,
         UNIQUE (user_id, pandal_id)
     );
 

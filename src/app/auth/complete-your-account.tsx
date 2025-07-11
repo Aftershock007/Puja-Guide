@@ -1,5 +1,6 @@
 import { useUser } from '@clerk/clerk-expo'
 import { zodResolver } from '@hookform/resolvers/zod'
+import { useMutation } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -15,6 +16,8 @@ import {
 	isValidGender
 } from '@/constants/GenderEnum'
 import { completeDetailsPageHeader } from '@/constants/Headings'
+import useSupabase from '@/lib/supabase'
+import type { Users } from '@/types/types'
 
 const formSchema = z.object({
 	full_name: z
@@ -49,6 +52,7 @@ export default function CompleteYourAccountScreen() {
 	const [isLoading, setIsLoading] = useState<boolean>(false)
 	const router = useRouter()
 	const insets = useSafeAreaInsets()
+	const supabase = useSupabase()
 
 	const { control, handleSubmit, setError, setValue, formState } =
 		useForm<FormData>({
@@ -60,6 +64,25 @@ export default function CompleteYourAccountScreen() {
 				gender: undefined
 			}
 		})
+
+	const updateUserMutation = useMutation({
+		mutationFn: async (userData: Users) => {
+			const { data, error } = await supabase
+				.from('users')
+				.insert({
+					id: userData?.id,
+					name: userData?.name,
+					email: userData?.email,
+					gender: userData?.gender,
+					age: userData?.age
+				})
+				.select()
+			if (error) {
+				throw error
+			}
+			return data
+		}
+	})
 
 	const { isValid } = formState
 
@@ -76,6 +99,13 @@ export default function CompleteYourAccountScreen() {
 				}
 			})
 			await user?.reload()
+			await updateUserMutation.mutateAsync({
+				id: user?.id || '',
+				name: full_name,
+				email: user?.primaryEmailAddress?.emailAddress || '',
+				age: Number(age),
+				gender
+			})
 			return router.push('/(tabs)')
 		} catch (_error: unknown) {
 			return setError('root', {
