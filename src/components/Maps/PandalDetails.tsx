@@ -30,7 +30,6 @@ const SCREEN_WIDTH = Dimensions.get('window').width
 const PADDING_HORIZONTAL = 35
 const AVAILABLE_WIDTH = SCREEN_WIDTH - PADDING_HORIZONTAL
 
-// Enhanced image cache with better memory management
 const imageCache = new Map<
 	string,
 	{
@@ -41,8 +40,7 @@ const imageCache = new Map<
 	}
 >()
 
-// Cache cleanup - remove old entries periodically
-const CACHE_TTL = 30 * 60 * 1000 // 30 minutes
+const CACHE_TTL = 30 * 60 * 1000
 const cleanupCache = () => {
 	const now = Date.now()
 	for (const [key, value] of imageCache.entries()) {
@@ -52,7 +50,6 @@ const cleanupCache = () => {
 	}
 }
 
-// Optimized preloading with better error handling and batching
 const preloadImage = (uri: string): Promise<void> => {
 	return new Promise((resolve) => {
 		const cached = imageCache.get(uri)
@@ -78,20 +75,17 @@ const preloadImage = (uri: string): Promise<void> => {
 					timestamp: Date.now(),
 					prefetched: true
 				})
-				resolve() // Don't reject, just mark as error
+				resolve()
 			})
 	})
 }
 
-// Batch preload images for better performance
 const preloadImages = async (urls: string[]): Promise<void> => {
-	// Preload first 3 images immediately, rest after a delay
 	const priorityUrls = urls.slice(0, 3)
 	const backgroundUrls = urls.slice(3)
 
 	await Promise.allSettled(priorityUrls.map(preloadImage))
 
-	// Preload remaining images with delay to not block UI
 	if (backgroundUrls.length > 0) {
 		setTimeout(() => {
 			Promise.allSettled(backgroundUrls.map(preloadImage))
@@ -124,7 +118,6 @@ const PaginationDot = memo<{ isActive: boolean; imageUrl: string }>(
 	)
 )
 
-// Optimized image component with better caching and loading states
 const OptimizedImage = memo<{
 	uri: string
 	width: number
@@ -137,12 +130,12 @@ const OptimizedImage = memo<{
 		return !cached?.loaded
 	})
 
-	const handleLoadStart = useCallback(() => {
+	const handleLoadStart = () => {
 		setIsLoading(true)
 		onLoadStart?.()
-	}, [onLoadStart])
+	}
 
-	const handleLoad = useCallback(() => {
+	const handleLoad = () => {
 		imageCache.set(uri, {
 			loaded: true,
 			error: false,
@@ -151,9 +144,9 @@ const OptimizedImage = memo<{
 		})
 		setIsLoading(false)
 		onLoadEnd?.()
-	}, [uri, onLoadEnd])
+	}
 
-	const handleError = useCallback(() => {
+	const handleError = () => {
 		imageCache.set(uri, {
 			loaded: false,
 			error: true,
@@ -162,7 +155,7 @@ const OptimizedImage = memo<{
 		})
 		setIsLoading(false)
 		onLoadEnd?.()
-	}, [uri, onLoadEnd])
+	}
 
 	return (
 		<View className="relative" style={{ width, height }}>
@@ -172,7 +165,6 @@ const OptimizedImage = memo<{
 				onLoad={handleLoad}
 				onLoadStart={handleLoadStart}
 				resizeMode="cover"
-				shouldRasterizeIOS={true}
 				source={{ uri, cache: 'force-cache' }}
 				style={{ width, height }}
 			/>
@@ -184,11 +176,10 @@ const OptimizedImage = memo<{
 const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 	({ pandal, isVisible, onClose }, ref) => {
 		const bottomSheetRef = useRef<BottomSheet>(null)
-		const snapPoints = useMemo(() => ['35%', '60%', '80%'], [])
+		const snapPoints = ['35%', '60%', '80%']
 		const fadeAnim = useRef(new Animated.Value(1)).current
 		const flatListRef = useRef<FlatList>(null)
 
-		// Simplified state management
 		const [state, setState] = useState({
 			currentImageIndex: 0,
 			imageContainerWidth: 0,
@@ -196,9 +187,6 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			forceHorizontalLayout: false,
 			isLayoutTransitioning: false
 		})
-
-		// Track loading images for better UX
-		const [loadingImages, setLoadingImages] = useState<Set<string>>(new Set())
 
 		const computedValues = useMemo(() => {
 			const isVerticalLayout =
@@ -220,13 +208,10 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			state.imageContainerWidth
 		])
 
-		const imageDimensions = useMemo(
-			() => ({
-				vertical: { width: AVAILABLE_WIDTH, height: 240 },
-				horizontal: { width: computedValues.imageWidth, height: 200 }
-			}),
-			[computedValues.imageWidth]
-		)
+		const imageDimensions = {
+			vertical: { width: AVAILABLE_WIDTH, height: 240 },
+			horizontal: { width: computedValues.imageWidth, height: 200 }
+		}
 
 		useImperativeHandle(
 			ref,
@@ -236,12 +221,9 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			[]
 		)
 
-		// Optimized image preloading
 		useEffect(() => {
 			if (pandal?.images && isVisible) {
-				// Cleanup cache periodically
 				cleanupCache()
-
 				InteractionManager.runAfterInteractions(() => {
 					preloadImages(pandal.images || [])
 				})
@@ -252,105 +234,98 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			setState((prev) => ({ ...prev, ...updates }))
 		}, [])
 
-		// Simplified layout transition without unnecessary fading
 		const animateToIndex = useCallback(
 			(targetIndex: number) => {
-				const currentIsVertical =
-					state.currentSnapIndex >= 2 && !state.forceHorizontalLayout
-				const targetIsVertical =
-					targetIndex >= 2 && !state.forceHorizontalLayout
+				setState((prevState) => {
+					const currentIsVertical =
+						prevState.currentSnapIndex >= 2 && !prevState.forceHorizontalLayout
+					const targetIsVertical =
+						targetIndex >= 2 && !prevState.forceHorizontalLayout
 
-				if (currentIsVertical !== targetIsVertical) {
-					updateState({ isLayoutTransitioning: true })
-
-					// Quick fade with shorter duration
-					Animated.timing(fadeAnim, {
-						toValue: 0.3,
-						duration: 100,
-						useNativeDriver: true
-					}).start(() => {
-						updateState({
-							currentSnapIndex: targetIndex,
-							imageContainerWidth: 0
-						})
-						bottomSheetRef.current?.snapToIndex(targetIndex)
-
-						// Fade back in quickly
+					if (currentIsVertical !== targetIsVertical) {
+						const newState = { ...prevState, isLayoutTransitioning: true }
+						setState(newState)
 						Animated.timing(fadeAnim, {
-							toValue: 1,
-							duration: 150,
+							toValue: 0.3,
+							duration: 100,
 							useNativeDriver: true
 						}).start(() => {
-							updateState({ isLayoutTransitioning: false })
+							setState((prev) => ({
+								...prev,
+								currentSnapIndex: targetIndex,
+								imageContainerWidth: 0
+							}))
+							bottomSheetRef.current?.snapToIndex(targetIndex)
+							Animated.timing(fadeAnim, {
+								toValue: 1,
+								duration: 150,
+								useNativeDriver: true
+							}).start(() => {
+								setState((prev) => ({ ...prev, isLayoutTransitioning: false }))
+							})
 						})
-					})
-				} else {
+						return newState
+					}
 					bottomSheetRef.current?.snapToIndex(targetIndex)
-					updateState({ currentSnapIndex: targetIndex })
-				}
+					return { ...prevState, currentSnapIndex: targetIndex }
+				})
 			},
-			[
-				fadeAnim,
-				updateState,
-				state.currentSnapIndex,
-				state.forceHorizontalLayout
-			]
+			[fadeAnim]
 		)
 
 		const handleSheetChanges = useCallback(
 			(index: number) => {
-				if (state.isLayoutTransitioning) {
-					return
-				}
+				setState((prevState) => {
+					if (prevState.isLayoutTransitioning) {
+						return prevState
+					}
 
-				const newIsVerticalLayout = index >= 2 && !state.forceHorizontalLayout
-				const oldIsVerticalLayout =
-					state.currentSnapIndex >= 2 && !state.forceHorizontalLayout
+					const newIsVerticalLayout =
+						index >= 2 && !prevState.forceHorizontalLayout
+					const oldIsVerticalLayout =
+						prevState.currentSnapIndex >= 2 && !prevState.forceHorizontalLayout
 
-				if (index === -1) {
-					onClose()
-					return
-				}
+					if (index === -1) {
+						onClose()
+						return prevState
+					}
 
-				if (newIsVerticalLayout !== oldIsVerticalLayout) {
-					updateState({ isLayoutTransitioning: true })
-
-					Animated.timing(fadeAnim, {
-						toValue: 0.3,
-						duration: 80,
-						useNativeDriver: true
-					}).start(() => {
-						updateState({
-							currentSnapIndex: index,
-							imageContainerWidth: 0,
-							forceHorizontalLayout:
-								index < 2 ? false : state.forceHorizontalLayout
-						})
+					if (newIsVerticalLayout !== oldIsVerticalLayout) {
+						const newState = { ...prevState, isLayoutTransitioning: true }
+						setState(newState)
 
 						Animated.timing(fadeAnim, {
-							toValue: 1,
-							duration: 120,
+							toValue: 0.3,
+							duration: 80,
 							useNativeDriver: true
 						}).start(() => {
-							updateState({ isLayoutTransitioning: false })
+							setState((prev) => ({
+								...prev,
+								currentSnapIndex: index,
+								imageContainerWidth: 0,
+								forceHorizontalLayout:
+									index < 2 ? false : prev.forceHorizontalLayout
+							}))
+
+							Animated.timing(fadeAnim, {
+								toValue: 1,
+								duration: 120,
+								useNativeDriver: true
+							}).start(() => {
+								setState((prev) => ({ ...prev, isLayoutTransitioning: false }))
+							})
 						})
-					})
-				} else {
-					updateState({
+						return newState
+					}
+					return {
+						...prevState,
 						currentSnapIndex: index,
 						forceHorizontalLayout:
-							index < 2 ? false : state.forceHorizontalLayout
-					})
-				}
+							index < 2 ? false : prevState.forceHorizontalLayout
+					}
+				})
 			},
-			[
-				state.currentSnapIndex,
-				state.forceHorizontalLayout,
-				state.isLayoutTransitioning,
-				onClose,
-				updateState,
-				fadeAnim
-			]
+			[onClose, fadeAnim]
 		)
 
 		useEffect(() => {
@@ -382,9 +357,8 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		const handleShowLess = useCallback(() => {
 			updateState({ forceHorizontalLayout: true, imageContainerWidth: 0 })
 			setTimeout(() => animateToIndex(1), 10)
-		}, [animateToIndex, updateState])
+		}, [updateState, animateToIndex])
 
-		// Optimized scroll handlers
 		const onScroll = useCallback(
 			(event: NativeSyntheticEvent<NativeScrollEvent>) => {
 				const contentOffsetX = event.nativeEvent.contentOffset.x
@@ -409,30 +383,11 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			[state.currentImageIndex, updateState]
 		)
 
-		// Track image loading states
-		const handleImageLoadStart = useCallback((uri: string) => {
-			setLoadingImages((prev) => new Set(prev).add(uri))
-		}, [])
-
-		const handleImageLoadEnd = useCallback((uri: string) => {
-			setLoadingImages((prev) => {
-				const newSet = new Set(prev)
-				newSet.delete(uri)
-				return newSet
-			})
-		}, [])
-
 		const renderOptimizedImage = useCallback(
 			(item: string, width: number, height: number) => (
-				<OptimizedImage
-					height={height}
-					onLoadEnd={() => handleImageLoadEnd(item)}
-					onLoadStart={() => handleImageLoadStart(item)}
-					uri={item}
-					width={width}
-				/>
+				<OptimizedImage height={height} uri={item} width={width} />
 			),
-			[handleImageLoadStart, handleImageLoadEnd]
+			[]
 		)
 
 		const renderPaginationDots = useCallback(() => {
@@ -514,12 +469,11 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		}, [
 			pandal,
 			computedValues,
-			handleShowLess,
+			handleShowMore,
 			handleShowMoreAgain,
-			handleShowMore
+			handleShowLess
 		])
 
-		// Optimized FlatList configuration
 		const flatListProps = useMemo(() => {
 			const dimensions = computedValues.isVerticalLayout
 				? imageDimensions.vertical
@@ -550,11 +504,12 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			}
 		}, [
 			computedValues.isVerticalLayout,
-			imageDimensions,
 			pandal.images,
 			onVerticalScroll,
-			onScroll,
-			renderOptimizedImage
+			imageDimensions.horizontal,
+			imageDimensions.vertical,
+			renderOptimizedImage,
+			onScroll
 		])
 
 		const renderDescription = useCallback(
@@ -636,11 +591,11 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			),
 			[
 				pandal,
-				flatListProps,
-				imageDimensions,
-				renderOptimizedImage,
-				state.currentImageIndex,
 				updateState,
+				flatListProps,
+				state.currentImageIndex,
+				imageDimensions.vertical,
+				renderOptimizedImage,
 				renderDescription,
 				renderRatingSection
 			]
@@ -679,19 +634,20 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			),
 			[
 				pandal,
-				flatListProps,
-				imageDimensions,
-				renderOptimizedImage,
-				renderPaginationDots,
 				updateState,
+				flatListProps,
+				renderPaginationDots,
+				imageDimensions.horizontal,
+				renderOptimizedImage,
 				renderDescription,
 				renderRatingSection
 			]
 		)
 
-		if (!isVisible) return null
+		if (!isVisible) {
+			return null
+		}
 
-		const hasLoadingImages = loadingImages.size > 0
 		const showMainContent = !state.isLayoutTransitioning
 
 		return (
