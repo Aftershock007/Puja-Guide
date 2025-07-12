@@ -1,7 +1,7 @@
 import { Text, TouchableOpacity, View } from 'react-native'
 import { Marker } from 'react-native-maps'
 import type { Pandals } from '@/types/types'
-import StarRating from './StarRating'
+import StarRating from '../PandalDetails/StarRating'
 
 interface CustomMarkerProps extends Pandals {
 	onPress?: () => void
