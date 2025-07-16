@@ -6,7 +6,7 @@ import CustomMarker from '@/components/Maps/CustomMarker'
 import PandalDetails from '@/components/PandalDetails/PandalDetails'
 import useSupabase from '@/lib/supabase'
 import { fetchPandals } from '@/service/fetchPandalService'
-import type { Pandals } from '@/types/types'
+import type { Pandals } from '@/types/dbTypes'
 
 interface PandalDetailsRef {
 	closeSheet: () => void

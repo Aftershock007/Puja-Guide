@@ -18,7 +18,7 @@ import {
 	View
 } from 'react-native'
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
-import type { Pandals } from '@/types/types'
+import type { Pandals } from '@/types/dbTypes'
 import { cleanupCache, preloadImages } from '../../utils/ImageCacheUtils'
 import HorizontalLayout from './HorizontalLayout'
 import VerticalLayout from './VerticalLayout'

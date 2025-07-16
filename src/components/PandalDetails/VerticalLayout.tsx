@@ -1,7 +1,7 @@
 import { Link } from 'expo-router'
 import { memo } from 'react'
 import { Text, View } from 'react-native'
-import type { Pandals } from '@/types/types'
+import type { Pandals } from '@/types/dbTypes'
 import ImageCarousel from './ImageCarousel'
 import RatingSection from './RatingSection'
 import StarRatingPicker from './StarRatingPicker'

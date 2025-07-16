@@ -24,7 +24,7 @@ import {
 import { completeDetailsPageHeader } from '@/constants/Headings'
 import useSupabase from '@/lib/supabase'
 import { insertUsers } from '@/service/insertUserService'
-import type { Users } from '@/types/types'
+import type { Users } from '@/types/dbTypes'
 
 const formSchema = z.object({
 	full_name: z

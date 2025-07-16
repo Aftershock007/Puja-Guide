@@ -1,6 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
 import type { Database } from '@/types/database.types'
-import type { Users } from '@/types/types'
+import type { Users } from '@/types/dbTypes'
 
 export const insertUsers = async (
 	supabase: SupabaseClient<Database>,

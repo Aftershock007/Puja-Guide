@@ -13,7 +13,7 @@ import { ClerkLoaded, ClerkProvider } from '@clerk/clerk-expo'
 import { tokenCache } from '@clerk/clerk-expo/token-cache'
 import { useReactQueryDevTools } from '@dev-plugins/react-query'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { useColorScheme } from '@/hooks/useColorScheme'
+import { useColorScheme } from 'react-native'
 
 preventAutoHideAsync()
 

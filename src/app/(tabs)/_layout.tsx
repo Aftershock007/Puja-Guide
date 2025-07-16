@@ -1,9 +1,8 @@
 import { useAuth, useUser } from '@clerk/clerk-expo'
 import { Ionicons } from '@expo/vector-icons'
 import { Redirect, Tabs } from 'expo-router'
-import { Platform } from 'react-native'
+import { Platform, useColorScheme } from 'react-native'
 import { Colors } from '@/constants/Colors'
-import { useColorScheme } from '@/hooks/useColorScheme'
 import '../../../global.css'
 
 export default function TabLayout() {
