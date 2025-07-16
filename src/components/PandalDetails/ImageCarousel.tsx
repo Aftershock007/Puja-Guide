@@ -26,7 +26,7 @@ const ImageCarousel = memo<ImageCarouselProps>(
 		currentImageIndex,
 		onImageIndexChange,
 		showPagination = true,
-		paginationPosition = 'bottom-right'
+		paginationPosition
 	}) => {
 		const flatListRef = useRef<FlatList>(null)
 
@@ -81,8 +81,8 @@ const ImageCarousel = memo<ImageCarouselProps>(
 
 			const positionClass =
 				paginationPosition === 'bottom-center'
-					? 'absolute bottom-2 left-0 right-0 flex-row justify-center'
-					: 'absolute right-3 bottom-2 left-0 flex-row justify-end'
+					? 'absolute bottom-12 left-0 right-3 flex-row justify-end'
+					: 'absolute right-3 bottom-6 left-0 flex-row justify-end'
 
 			return (
 				<View className={positionClass}>

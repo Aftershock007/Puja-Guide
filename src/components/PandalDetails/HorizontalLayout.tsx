@@ -1,45 +1,38 @@
 import { memo } from 'react'
 import { Text, View } from 'react-native'
-import DescriptionSection, { type DescriptionState } from './DescriptionSection'
+import type { Pandals } from '@/types/types'
 import ImageCarousel from './ImageCarousel'
 import RatingSection from './RatingSection'
+import StarRatingPicker from './StarRatingPicker'
 
 interface HorizontalLayoutProps {
-	clubname: string
-	description?: string
-	rating?: number
-	images: string[]
+	pandal: Pandals
 	imageWidth: number
 	imageHeight: number
 	currentImageIndex: number
 	onImageIndexChange: (index: number) => void
 	onImageContainerLayout: (width: number) => void
-	descriptionState: DescriptionState
-	onShowMore: () => void
-	onShowMoreAgain: () => void
-	onShowLess: () => void
-	isLayoutTransitioning?: boolean
 }
 
 const HorizontalLayout = memo<HorizontalLayoutProps>(
 	({
-		clubname,
-		description,
-		rating,
-		images,
+		pandal,
 		imageWidth,
 		imageHeight,
 		currentImageIndex,
 		onImageIndexChange,
-		onImageContainerLayout,
-		descriptionState,
-		onShowMore,
-		onShowMoreAgain,
-		onShowLess,
-		isLayoutTransitioning = false
+		onImageContainerLayout
 	}) => {
+		const {
+			clubname = '',
+			theme = '',
+			artistname = '',
+			rating = 0,
+			images = []
+		} = pandal
+
 		return (
-			<View className="h-48 flex-row overflow-hidden rounded-2xl bg-white">
+			<View className="h-[190px] flex-row overflow-hidden rounded-2xl bg-white">
 				<View
 					className="relative w-2/5"
 					onLayout={(e) => onImageContainerLayout(e.nativeEvent.layout.width)}
@@ -47,28 +40,51 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 					<ImageCarousel
 						currentImageIndex={currentImageIndex}
 						height={imageHeight}
-						images={images}
+						images={images || []}
 						onImageIndexChange={onImageIndexChange}
 						paginationPosition="bottom-right"
-						showPagination={images.length > 1}
+						showPagination={(images || []).length > 1}
 						width={imageWidth}
 					/>
 				</View>
-				<View className="flex-1 justify-center bg-black p-6">
-					<Text className="mb-3 font-bold text-white text-xl leading-tight">
-						{clubname}
-					</Text>
-					{description && (
-						<DescriptionSection
-							description={description}
-							isLayoutTransitioning={isLayoutTransitioning}
-							onShowLess={onShowLess}
-							onShowMore={onShowMore}
-							onShowMoreAgain={onShowMoreAgain}
-							state={descriptionState}
-						/>
+				<View className="flex-1 justify-center bg-black px-4">
+					{clubname && (
+						<Text className="mb-1.5 font-bold text-2xl text-white">
+							{clubname}
+						</Text>
 					)}
-					<RatingSection rating={rating} />
+					{rating && (
+						<View className="mb-1.5">
+							<RatingSection rating={rating || 0} />
+						</View>
+					)}
+					{theme && (
+						<View className="mb-1.5 flex flex-row items-start">
+							<Text className="mr-1 font-bold text-[14px] text-white">
+								Theme:
+							</Text>
+							<Text className="mt-[1.8px] flex-1 text-[12px] text-white">
+								{theme}
+							</Text>
+						</View>
+					)}
+					{artistname && (
+						<View className="mb-1.5 flex flex-row items-start">
+							<Text className="mr-1 font-bold text-[14px] text-white">
+								Artist:
+							</Text>
+							<Text className="mt-[1.6px] flex-1 text-[12px] text-white">
+								{artistname}
+							</Text>
+						</View>
+					)}
+					<View className="my-2 h-[1px] bg-white" />
+					<View className="items-center">
+						<Text className="mr-1 mb-1 font-bold text-[14px] text-white">
+							Rate this pandal:
+						</Text>
+						<StarRatingPicker starSize={27} />
+					</View>
 				</View>
 			</View>
 		)

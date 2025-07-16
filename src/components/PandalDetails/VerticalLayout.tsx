@@ -1,43 +1,40 @@
+import { Link } from 'expo-router'
 import { memo } from 'react'
 import { Text, View } from 'react-native'
-import DescriptionSection, { type DescriptionState } from './DescriptionSection'
+import type { Pandals } from '@/types/types'
 import ImageCarousel from './ImageCarousel'
 import RatingSection from './RatingSection'
+import StarRatingPicker from './StarRatingPicker'
 
 interface VerticalLayoutProps {
-	clubname: string
-	description?: string
-	rating?: number
-	images: string[]
+	pandal: Pandals
 	imageWidth: number
 	imageHeight: number
 	currentImageIndex: number
 	onImageIndexChange: (index: number) => void
 	onImageContainerLayout: (width: number) => void
-	descriptionState: DescriptionState
-	onShowMore: () => void
-	onShowMoreAgain: () => void
-	onShowLess: () => void
-	isLayoutTransitioning?: boolean
 }
 
 const VerticalLayout = memo<VerticalLayoutProps>(
 	({
-		clubname,
-		description,
-		rating,
-		images,
+		pandal,
 		imageWidth,
 		imageHeight,
 		currentImageIndex,
 		onImageIndexChange,
-		onImageContainerLayout,
-		descriptionState,
-		onShowMore,
-		onShowMoreAgain,
-		onShowLess,
-		isLayoutTransitioning = false
+		onImageContainerLayout
 	}) => {
+		const {
+			clubname,
+			description = '',
+			theme = '',
+			artistname = '',
+			clubsocialmedialinks = [],
+			address = '',
+			rating = 0,
+			images = []
+		} = pandal
+
 		return (
 			<View className="overflow-hidden rounded-2xl bg-white">
 				<View className="flex-col">
@@ -48,30 +45,85 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 						<ImageCarousel
 							currentImageIndex={currentImageIndex}
 							height={imageHeight}
-							images={images}
+							images={images || []}
 							onImageIndexChange={onImageIndexChange}
-							paginationPosition="bottom-right"
-							showPagination={images.length > 1}
+							paginationPosition="bottom-center"
+							showPagination={(images || []).length > 1}
 							width={imageWidth}
 						/>
-						<View className="absolute right-0 bottom-0 left-0 p-4">
-							<Text className="font-bold text-2xl text-white leading-tight">
+						<View className="absolute right-0 bottom-0 left-0 pb-2 pl-3">
+							<Text className="mb-[1.2px] font-bold text-2xl text-white">
 								{clubname}
 							</Text>
+							<RatingSection rating={rating || 0} />
 						</View>
 					</View>
-					<View className="bg-black px-5 pt-2 pb-4">
-						{description && (
-							<DescriptionSection
-								description={description}
-								isLayoutTransitioning={isLayoutTransitioning}
-								onShowLess={onShowLess}
-								onShowMore={onShowMore}
-								onShowMoreAgain={onShowMoreAgain}
-								state={descriptionState}
-							/>
+					<View className="bg-black p-3">
+						{theme && (
+							<View className="mb-2 flex flex-row items-start">
+								<Text className="mr-1 font-bold text-[14px] text-white">
+									Theme:
+								</Text>
+								<Text className="mt-[1.8px] flex-1 text-[12px] text-white">
+									{theme}
+								</Text>
+							</View>
 						)}
-						<RatingSection rating={rating} />
+						{artistname && (
+							<View className="mb-2 flex flex-row items-start">
+								<Text className="mr-1 font-bold text-[14px] text-white">
+									Artist:
+								</Text>
+								<Text className="mt-[1.6px] flex-1 text-[12px] text-white">
+									{artistname}
+								</Text>
+							</View>
+						)}
+						{description && (
+							<View className="mb-2 flex flex-row items-start">
+								<Text className="mr-1 font-bold text-[14px] text-white">
+									Description:
+								</Text>
+								<Text className="mt-[1.8px] flex-1 text-[12px] text-white">
+									{description}
+								</Text>
+							</View>
+						)}
+						{address && (
+							<View className="mb-2 flex flex-row items-start">
+								<Text className="mr-1 font-bold text-[14px] text-white">
+									Address:
+								</Text>
+								<Text className="mt-[1.8px] flex-1 text-[12px] text-white">
+									{address}
+								</Text>
+							</View>
+						)}
+						{clubsocialmedialinks && clubsocialmedialinks.length > 0 && (
+							<View className="mb-2 flex flex-row">
+								<Text className="mr-1 font-bold text-[14px] text-white">
+									Socials:
+								</Text>
+								<View className="mt-[1.8px] flex-1">
+									{clubsocialmedialinks.map((clubsocialmedialink, index) => (
+										<Link
+											className="text-[12px] text-blue-400"
+											href={clubsocialmedialink}
+											key={`${clubsocialmedialink}-${index}`}
+										>
+											{clubsocialmedialink}
+										</Link>
+									))}
+								</View>
+							</View>
+						)}
+						<View className="my-3 h-[1px] bg-white" />
+						<View className="mb-2 flex flex-row items-center">
+							<Text className="mt-[1px] mr-1 font-bold text-[14px] text-white">
+								Rate this pandal:
+							</Text>
+							<StarRatingPicker starSize={30} />
+						</View>
 					</View>
 				</View>
 			</View>

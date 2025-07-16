@@ -20,7 +20,6 @@ import {
 import { GestureHandlerRootView } from 'react-native-gesture-handler'
 import type { Pandals } from '@/types/types'
 import { cleanupCache, preloadImages } from '../../utils/ImageCacheUtils'
-import type { DescriptionState } from './DescriptionSection'
 import HorizontalLayout from './HorizontalLayout'
 import VerticalLayout from './VerticalLayout'
 
@@ -41,7 +40,7 @@ export interface PandalDetailsRef {
 const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 	({ pandal, isVisible, onClose }, ref) => {
 		const bottomSheetRef = useRef<BottomSheet>(null)
-		const snapPoints = ['35%', '60%', '80%']
+		const snapPoints = ['35%', '90%', '90%']
 		const fadeAnim = useRef(new Animated.Value(1)).current
 
 		const [state, setState] = useState({
@@ -59,20 +58,9 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 				? state.imageContainerWidth || AVAILABLE_WIDTH
 				: state.imageContainerWidth || AVAILABLE_WIDTH * 0.4
 
-			const getDescriptionState = (): DescriptionState => {
-				if (state.currentSnapIndex === 3) {
-					return 'fully-expanded'
-				}
-				if (state.currentSnapIndex === 2) {
-					return 'expanded'
-				}
-				return 'collapsed'
-			}
-
 			return {
 				isVerticalLayout,
-				imageWidth,
-				descriptionState: getDescriptionState()
+				imageWidth
 			}
 		}, [
 			state.currentSnapIndex,
@@ -82,7 +70,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 
 		const imageDimensions = useMemo(
 			() => ({
-				vertical: { width: AVAILABLE_WIDTH, height: 240 },
+				vertical: { width: computedValues.imageWidth, height: 240 },
 				horizontal: { width: computedValues.imageWidth, height: 200 }
 			}),
 			[computedValues.imageWidth]
@@ -109,45 +97,6 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			setState((prev) => ({ ...prev, ...updates }))
 		}, [])
 
-		const animateToIndex = useCallback(
-			(targetIndex: number) => {
-				setState((prevState) => {
-					const currentIsVertical =
-						prevState.currentSnapIndex >= 2 && !prevState.forceHorizontalLayout
-					const targetIsVertical =
-						targetIndex >= 2 && !prevState.forceHorizontalLayout
-
-					if (currentIsVertical !== targetIsVertical) {
-						const newState = { ...prevState, isLayoutTransitioning: true }
-						setState(newState)
-						Animated.timing(fadeAnim, {
-							toValue: 0.3,
-							duration: 100,
-							useNativeDriver: true
-						}).start(() => {
-							setState((prev) => ({
-								...prev,
-								currentSnapIndex: targetIndex,
-								imageContainerWidth: 0
-							}))
-							bottomSheetRef.current?.snapToIndex(targetIndex)
-							Animated.timing(fadeAnim, {
-								toValue: 1,
-								duration: 150,
-								useNativeDriver: true
-							}).start(() => {
-								setState((prev) => ({ ...prev, isLayoutTransitioning: false }))
-							})
-						})
-						return newState
-					}
-					bottomSheetRef.current?.snapToIndex(targetIndex)
-					return { ...prevState, currentSnapIndex: targetIndex }
-				})
-			},
-			[fadeAnim]
-		)
-
 		const handleSheetChanges = useCallback(
 			(index: number) => {
 				setState((prevState) => {
@@ -160,7 +109,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 					const oldIsVerticalLayout =
 						prevState.currentSnapIndex >= 2 && !prevState.forceHorizontalLayout
 
-					if (index === -1) {
+					if (index < 1) {
 						onClose()
 						return prevState
 					}
@@ -221,19 +170,6 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			}
 		}, [isVisible, fadeAnim])
 
-		const handleShowMore = useCallback(
-			() => animateToIndex(2),
-			[animateToIndex]
-		)
-		const handleShowMoreAgain = useCallback(
-			() => animateToIndex(3),
-			[animateToIndex]
-		)
-		const handleShowLess = useCallback(() => {
-			updateState({ forceHorizontalLayout: true, imageContainerWidth: 0 })
-			setTimeout(() => animateToIndex(1), 10)
-		}, [updateState, animateToIndex])
-
 		const handleImageIndexChange = useCallback(
 			(index: number) => {
 				updateState({ currentImageIndex: index })
@@ -275,37 +211,21 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 							<Animated.View className="flex-1" style={{ opacity: fadeAnim }}>
 								{computedValues.isVerticalLayout ? (
 									<VerticalLayout
-										clubname={pandal.clubname}
 										currentImageIndex={state.currentImageIndex}
-										description={pandal.description || ''}
-										descriptionState={computedValues.descriptionState}
 										imageHeight={currentDimensions.height}
-										images={pandal.images || []}
 										imageWidth={currentDimensions.width}
-										isLayoutTransitioning={state.isLayoutTransitioning}
 										onImageContainerLayout={handleImageContainerLayout}
 										onImageIndexChange={handleImageIndexChange}
-										onShowLess={handleShowLess}
-										onShowMore={handleShowMore}
-										onShowMoreAgain={handleShowMoreAgain}
-										rating={pandal.rating || 0}
+										pandal={pandal}
 									/>
 								) : (
 									<HorizontalLayout
-										clubname={pandal.clubname}
 										currentImageIndex={state.currentImageIndex}
-										description={pandal.description || ''}
-										descriptionState={computedValues.descriptionState}
 										imageHeight={currentDimensions.height}
-										images={pandal.images || []}
 										imageWidth={currentDimensions.width}
-										isLayoutTransitioning={state.isLayoutTransitioning}
 										onImageContainerLayout={handleImageContainerLayout}
 										onImageIndexChange={handleImageIndexChange}
-										onShowLess={handleShowLess}
-										onShowMore={handleShowMore}
-										onShowMoreAgain={handleShowMoreAgain}
-										rating={pandal.rating || 0}
+										pandal={pandal}
 									/>
 								)}
 							</Animated.View>
