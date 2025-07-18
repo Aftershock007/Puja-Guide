@@ -55,6 +55,12 @@ export default function HomeScreen() {
 		}
 	}
 
+	const handlePandalNavigate = (newPandal: Pandals) => {
+		setTimeout(() => {
+			setSelectedPandal(newPandal)
+		}, 0)
+	}
+
 	if (isLoading) {
 		return (
 			<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -97,8 +103,10 @@ export default function HomeScreen() {
 			</MapView>
 			{selectedPandal && (
 				<PandalDetails
+					allPandals={pandals || []}
 					isVisible={isBottomSheetVisible}
 					onClose={handleBottomSheetClose}
+					onPandalNavigate={handlePandalNavigate}
 					pandal={selectedPandal}
 					ref={pandalDetailsRef}
 				/>

@@ -31,6 +31,8 @@ interface PandalDetailsProps {
 	pandal: Pandals
 	isVisible: boolean
 	onClose: () => void
+	allPandals: Pandals[]
+	onPandalNavigate?: (pandal: Pandals) => void
 }
 
 export interface PandalDetailsRef {
@@ -38,9 +40,9 @@ export interface PandalDetailsRef {
 }
 
 const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
-	({ pandal, isVisible, onClose }, ref) => {
+	({ pandal, isVisible, onClose, allPandals, onPandalNavigate }, ref) => {
 		const bottomSheetRef = useRef<BottomSheet>(null)
-		const snapPoints = ['35%', '90%', '90%']
+		const snapPoints = ['35%', '85%', '85%']
 		const fadeAnim = useRef(new Animated.Value(1)).current
 
 		const [state, setState] = useState({
@@ -70,7 +72,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 
 		const imageDimensions = useMemo(
 			() => ({
-				vertical: { width: computedValues.imageWidth, height: 240 },
+				vertical: { width: computedValues.imageWidth, height: 200 },
 				horizontal: { width: computedValues.imageWidth, height: 200 }
 			}),
 			[computedValues.imageWidth]
@@ -94,60 +96,83 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		}, [pandal?.images, isVisible])
 
 		const updateState = useCallback((updates: Partial<typeof state>) => {
-			setState((prev) => ({ ...prev, ...updates }))
+			setTimeout(() => {
+				setState((prev) => ({ ...prev, ...updates }))
+			}, 0)
 		}, [])
+
+		const handleNearestPandalPress = useCallback(
+			(nearestPandal: Pandals) => {
+				if (onPandalNavigate) {
+					onPandalNavigate(nearestPandal)
+				} else {
+					onClose()
+				}
+			},
+			[onPandalNavigate, onClose]
+		)
 
 		const handleSheetChanges = useCallback(
 			(index: number) => {
-				setState((prevState) => {
-					if (prevState.isLayoutTransitioning) {
-						return prevState
-					}
+				setTimeout(() => {
+					setState((prevState) => {
+						if (prevState.isLayoutTransitioning) {
+							return prevState
+						}
 
-					const newIsVerticalLayout =
-						index >= 2 && !prevState.forceHorizontalLayout
-					const oldIsVerticalLayout =
-						prevState.currentSnapIndex >= 2 && !prevState.forceHorizontalLayout
+						const newIsVerticalLayout =
+							index >= 2 && !prevState.forceHorizontalLayout
+						const oldIsVerticalLayout =
+							prevState.currentSnapIndex >= 2 &&
+							!prevState.forceHorizontalLayout
 
-					if (index < 1) {
-						onClose()
-						return prevState
-					}
+						if (index < 1) {
+							onClose()
+							return prevState
+						}
 
-					if (newIsVerticalLayout !== oldIsVerticalLayout) {
-						const newState = { ...prevState, isLayoutTransitioning: true }
-						setState(newState)
-
-						Animated.timing(fadeAnim, {
-							toValue: 0.3,
-							duration: 80,
-							useNativeDriver: true
-						}).start(() => {
-							setState((prev) => ({
-								...prev,
-								currentSnapIndex: index,
-								imageContainerWidth: 0,
-								forceHorizontalLayout:
-									index < 2 ? false : prev.forceHorizontalLayout
-							}))
+						if (newIsVerticalLayout !== oldIsVerticalLayout) {
+							const newState = { ...prevState, isLayoutTransitioning: true }
+							setState(newState)
 
 							Animated.timing(fadeAnim, {
-								toValue: 1,
-								duration: 120,
+								toValue: 0.3,
+								duration: 80,
 								useNativeDriver: true
 							}).start(() => {
-								setState((prev) => ({ ...prev, isLayoutTransitioning: false }))
+								setTimeout(() => {
+									setState((prev) => ({
+										...prev,
+										currentSnapIndex: index,
+										imageContainerWidth: 0,
+										forceHorizontalLayout:
+											index < 2 ? false : prev.forceHorizontalLayout
+									}))
+
+									Animated.timing(fadeAnim, {
+										toValue: 1,
+										duration: 120,
+										useNativeDriver: true
+									}).start(() => {
+										setTimeout(() => {
+											setState((prev) => ({
+												...prev,
+												isLayoutTransitioning: false
+											}))
+										}, 0)
+									})
+								}, 0)
 							})
-						})
-						return newState
-					}
-					return {
-						...prevState,
-						currentSnapIndex: index,
-						forceHorizontalLayout:
-							index < 2 ? false : prevState.forceHorizontalLayout
-					}
-				})
+							return newState
+						}
+						return {
+							...prevState,
+							currentSnapIndex: index,
+							forceHorizontalLayout:
+								index < 2 ? false : prevState.forceHorizontalLayout
+						}
+					})
+				}, 0)
 			},
 			[onClose, fadeAnim]
 		)
@@ -155,15 +180,17 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		useEffect(() => {
 			if (isVisible) {
 				InteractionManager.runAfterInteractions(() => {
-					bottomSheetRef.current?.expand()
-					setState({
-						currentImageIndex: 0,
-						imageContainerWidth: 0,
-						currentSnapIndex: 1,
-						forceHorizontalLayout: false,
-						isLayoutTransitioning: false
-					})
-					fadeAnim.setValue(1)
+					setTimeout(() => {
+						bottomSheetRef.current?.expand()
+						setState({
+							currentImageIndex: 0,
+							imageContainerWidth: 0,
+							currentSnapIndex: 1,
+							forceHorizontalLayout: false,
+							isLayoutTransitioning: false
+						})
+						fadeAnim.setValue(1)
+					}, 0)
 				})
 			} else {
 				bottomSheetRef.current?.close()
@@ -211,11 +238,13 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 							<Animated.View className="flex-1" style={{ opacity: fadeAnim }}>
 								{computedValues.isVerticalLayout ? (
 									<VerticalLayout
+										allPandals={allPandals}
 										currentImageIndex={state.currentImageIndex}
 										imageHeight={currentDimensions.height}
 										imageWidth={currentDimensions.width}
 										onImageContainerLayout={handleImageContainerLayout}
 										onImageIndexChange={handleImageIndexChange}
+										onNearestPandalPress={handleNearestPandalPress}
 										pandal={pandal}
 									/>
 								) : (
@@ -231,7 +260,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 							</Animated.View>
 						) : (
 							<View className="min-h-[200px] flex-1 items-center justify-center">
-								<ActivityIndicator size="small" />
+								<ActivityIndicator color="black" size="small" />
 								<Text className="mt-3 text-black text-sm">Loading...</Text>
 							</View>
 						)}

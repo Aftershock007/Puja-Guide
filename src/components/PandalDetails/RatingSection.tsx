@@ -4,25 +4,22 @@ import StarRating from './StarRating'
 
 interface RatingSectionProps {
 	rating?: number
-	textColor?: string
 }
 
-const RatingSection = memo<RatingSectionProps>(
-	({ rating, textColor = 'text-white' }) => {
-		if (!rating) {
-			return null
-		}
-
-		return (
-			<View className="flex-row items-center gap-2">
-				<StarRating rating={rating} />
-				<Text className={`font-semibold text-sm ${textColor}`}>
-					{rating.toFixed(1)}
-				</Text>
-			</View>
-		)
+const RatingSection = memo<RatingSectionProps>(({ rating }) => {
+	if (!rating) {
+		return null
 	}
-)
+
+	return (
+		<View className="flex-row items-center gap-2">
+			<StarRating rating={rating} />
+			<Text className="font-semibold text-[11px] text-black">
+				{rating.toFixed(1)}
+			</Text>
+		</View>
+	)
+})
 
 RatingSection.displayName = 'RatingSection'
 

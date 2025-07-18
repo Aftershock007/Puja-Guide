@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo, useRef } from 'react'
+import { memo, useCallback, useEffect, useMemo, useRef } from 'react'
 import {
 	FlatList,
 	type NativeScrollEvent,
@@ -30,15 +30,28 @@ const ImageCarousel = memo<ImageCarouselProps>(
 	}) => {
 		const flatListRef = useRef<FlatList>(null)
 
+		const safeCurrentIndex = useMemo(() => {
+			return Math.min(currentImageIndex, Math.max(0, images.length - 1))
+		}, [currentImageIndex, images.length])
+
+		useEffect(() => {
+			if (currentImageIndex >= images.length && images.length > 0) {
+				onImageIndexChange(0)
+			}
+		}, [images.length, currentImageIndex, onImageIndexChange])
+
 		const onScroll = useCallback(
 			(event: NativeSyntheticEvent<NativeScrollEvent>) => {
 				const contentOffsetX = event.nativeEvent.contentOffset.x
-				const currentIndex = Math.round(contentOffsetX / width)
-				if (currentIndex !== currentImageIndex) {
-					onImageIndexChange(currentIndex)
+				const newIndex = Math.round(contentOffsetX / width)
+
+				const boundedIndex = Math.min(Math.max(0, newIndex), images.length - 1)
+
+				if (boundedIndex !== safeCurrentIndex && boundedIndex < images.length) {
+					onImageIndexChange(boundedIndex)
 				}
 			},
-			[width, currentImageIndex, onImageIndexChange]
+			[width, safeCurrentIndex, onImageIndexChange, images.length]
 		)
 
 		const renderImage = useCallback(
@@ -62,7 +75,7 @@ const ImageCarousel = memo<ImageCarouselProps>(
 				updateCellsBatchingPeriod: 50,
 				scrollEventThrottle: 32,
 				snapToAlignment: 'start' as const,
-				keyExtractor: (item: string) => item,
+				keyExtractor: (item: string, index: number) => `${item}-${index}`,
 				onScroll,
 				getItemLayout: (_: unknown, index: number) => ({
 					length: width,
@@ -81,21 +94,21 @@ const ImageCarousel = memo<ImageCarouselProps>(
 
 			const positionClass =
 				paginationPosition === 'bottom-center'
-					? 'absolute bottom-12 left-0 right-3 flex-row justify-end'
-					: 'absolute right-3 bottom-6 left-0 flex-row justify-end'
+					? 'absolute bottom-9 left-0 right-0 flex-row justify-center z-10'
+					: 'absolute right-3 bottom-6 left-0 flex-row justify-end z-10'
 
 			return (
 				<View className={positionClass}>
 					{images.map((imageUrl, index) => (
 						<PaginationDot
 							imageUrl={imageUrl}
-							isActive={index === currentImageIndex}
-							key={`dot-${imageUrl}`}
+							isActive={index === safeCurrentIndex}
+							key={`dot-${imageUrl}-${index}`}
 						/>
 					))}
 				</View>
 			)
-		}, [images, currentImageIndex, showPagination, paginationPosition])
+		}, [images, safeCurrentIndex, showPagination, paginationPosition])
 
 		if (images.length === 0) {
 			return null

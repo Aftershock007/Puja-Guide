@@ -19,7 +19,7 @@ const OptimizedImage = memo<OptimizedImageProps>(
 		})
 
 		const handleLoadStart = () => {
-			setIsLoading(true)
+			setIsLoading(false)
 			onLoadStart?.()
 		}
 
