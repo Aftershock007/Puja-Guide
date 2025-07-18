@@ -42,7 +42,7 @@ export interface PandalDetailsRef {
 const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 	({ pandal, isVisible, onClose, allPandals, onPandalNavigate }, ref) => {
 		const bottomSheetRef = useRef<BottomSheet>(null)
-		const snapPoints = ['35%', '85%', '85%']
+		const snapPoints = ['35%', '90%', '90%']
 		const fadeAnim = useRef(new Animated.Value(1)).current
 
 		const [state, setState] = useState({

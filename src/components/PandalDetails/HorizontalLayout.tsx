@@ -16,7 +16,13 @@ interface HorizontalLayoutProps {
 
 const HorizontalLayout = memo<HorizontalLayoutProps>(
 	({ pandal, imageWidth, imageHeight, onImageContainerLayout }) => {
-		const { clubname, description, rating, images } = pandal
+		const {
+			clubname = '',
+			theme = '',
+			artistname = '',
+			rating = 0,
+			images = []
+		} = pandal
 
 		const safeImages = images || []
 		const safeRating = rating || 0
@@ -81,15 +87,22 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 								<RatingSection rating={safeRating} />
 							</View>
 						)}
-						{description && (
-							<View className="mb-1.5">
-								<Text className="text-[10px]" numberOfLines={3}>
-									{description}
+						{theme && (
+							<View className="mb-2 flex flex-row items-start">
+								<Text className="mr-1 font-bold text-[13px]">Theme:</Text>
+								<Text className="mt-[1.8px] flex-1 text-[11.5px]">{theme}</Text>
+							</View>
+						)}
+						{artistname && (
+							<View className="mb-2 flex flex-row items-start">
+								<Text className="mr-1 font-bold text-[13px]">Artist:</Text>
+								<Text className="mt-[1.6px] flex-1 text-[11.5px]">
+									{artistname}
 								</Text>
 							</View>
 						)}
 						<View
-							className="mx-0.5 my-2 h-[1.5px]"
+							className="mx-0.5 my-1 h-[1.5px]"
 							style={{
 								backgroundColor: '#e5e7eb',
 								shadowColor: '#000',
@@ -100,7 +113,7 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 								borderTopColor: 'rgba(255, 255, 255, 0.8)'
 							}}
 						/>
-						<View className="items-center">
+						<View className="mt-1 items-center">
 							<Text className="mb-1 font-bold text-[12px]">
 								Rate this pandal:
 							</Text>

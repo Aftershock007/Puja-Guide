@@ -96,29 +96,29 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 						</View>
 						{rating && (
 							<View className="mb-2 flex flex-row items-start">
-								<Text className="mr-2 font-bold text-[13px]">Rating:</Text>
+								<Text className="mt-[-1.5px] mr-1 font-bold text-[13px]">
+									Rating:
+								</Text>
 								<RatingSection rating={rating} />
 							</View>
 						)}
 						{theme && (
 							<View className="mb-2 flex flex-row items-start">
-								<Text className="mr-2 font-bold text-[13px]">Theme:</Text>
+								<Text className="mr-1 font-bold text-[13px]">Theme:</Text>
 								<Text className="mt-[1.8px] flex-1 text-[11.5px]">{theme}</Text>
 							</View>
 						)}
-
 						{artistname && (
 							<View className="mb-2 flex flex-row items-start">
-								<Text className="mr-2 font-bold text-[13px]">Artist:</Text>
+								<Text className="mr-1 font-bold text-[13px]">Artist:</Text>
 								<Text className="mt-[1.6px] flex-1 text-[11.5px]">
 									{artistname}
 								</Text>
 							</View>
 						)}
-
 						{description && (
 							<View className="mb-2 flex flex-row items-start">
-								<Text className="mr-2 font-bold text-[13px]">Description:</Text>
+								<Text className="mr-1 font-bold text-[13px]">Description:</Text>
 								<Text
 									className="mt-[1.8px] flex-1 text-[11.5px]"
 									numberOfLines={2}
@@ -127,19 +127,17 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 								</Text>
 							</View>
 						)}
-
 						{address && (
 							<View className="mb-2 flex flex-row items-start">
-								<Text className="mr-2 font-bold text-[13px]">Address:</Text>
+								<Text className="mr-1 font-bold text-[13px]">Address:</Text>
 								<Text className="mt-[1.8px] flex-1 text-[11.5px]">
 									{address}
 								</Text>
 							</View>
 						)}
-
 						{clubsocialmedialinks && clubsocialmedialinks.length > 0 && (
 							<View className="mb-1 flex flex-row">
-								<Text className="mr-2 font-bold text-[13px]">Socials:</Text>
+								<Text className="mr-1 font-bold text-[13px]">Socials:</Text>
 								<View className="mt-[1.8px] flex-1">
 									{clubsocialmedialinks.map((clubsocialmedialink) => (
 										<Link
@@ -166,7 +164,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 							}}
 						/>
 						<View className="flex flex-row items-center">
-							<Text className="mt-[1px] mr-2 font-bold text-[13px]">
+							<Text className="mt-[1px] mr-1 font-bold text-[13px]">
 								Rate this pandal:
 							</Text>
 							<StarRatingPicker starSize={30} />
@@ -175,7 +173,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 					<NearestPandals
 						allPandals={allPandals}
 						currentPandal={pandal}
-						limit={10} // Changed from 5 to 10
+						limit={7}
 						onPandalPress={onNearestPandalPress}
 					/>
 				</View>
