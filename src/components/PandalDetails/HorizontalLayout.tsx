@@ -90,13 +90,21 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 						{theme && (
 							<View className="mb-2 flex flex-row items-start">
 								<Text className="mr-1 font-bold text-[13px]">Theme:</Text>
-								<Text className="mt-[1.8px] flex-1 text-[11.5px]">{theme}</Text>
+								<Text
+									className="mt-[1.8px] flex-1 text-[11.5px]"
+									numberOfLines={1}
+								>
+									{theme}
+								</Text>
 							</View>
 						)}
 						{artistname && (
 							<View className="mb-2 flex flex-row items-start">
 								<Text className="mr-1 font-bold text-[13px]">Artist:</Text>
-								<Text className="mt-[1.6px] flex-1 text-[11.5px]">
+								<Text
+									className="mt-[1.6px] flex-1 text-[11.5px]"
+									numberOfLines={1}
+								>
 									{artistname}
 								</Text>
 							</View>
