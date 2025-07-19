@@ -1,6 +1,8 @@
-import { memo, useMemo } from 'react'
+import { memo, useEffect, useMemo } from 'react'
 import { Text, View } from 'react-native'
+import { useFavorites } from '@/hooks/useFavourites'
 import type { Pandals } from '@/types/dbTypes'
+import FavoriteButton from './FavoriteButton'
 import ImageCarousel from './ImageCarousel'
 import RatingSection from './RatingSection'
 import StarRatingPicker from './StarRatingPicker'
@@ -12,11 +14,13 @@ interface HorizontalLayoutProps {
 	currentImageIndex: number
 	onImageIndexChange: (index: number) => void
 	onImageContainerLayout: (width: number) => void
+	userId: string
 }
 
 const HorizontalLayout = memo<HorizontalLayoutProps>(
-	({ pandal, imageWidth, imageHeight, onImageContainerLayout }) => {
+	({ pandal, imageWidth, imageHeight, onImageContainerLayout, userId }) => {
 		const {
+			id: pandalId,
 			clubname = '',
 			theme = '',
 			artistname = '',
@@ -24,12 +28,33 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 			images = []
 		} = pandal
 
-		const safeImages = images || []
-		const safeRating = rating || 0
-
 		const displayImages = useMemo(() => {
-			return safeImages.length > 0 ? [safeImages[0]] : []
-		}, [safeImages])
+			return images && images.length > 0 ? [images[0]] : []
+		}, [images])
+
+		const {
+			isFavorited,
+			isCheckingFavorite,
+			isUpdating,
+			isDebouncing,
+			toggleFavorite,
+			error,
+			cleanup
+		} = useFavorites({
+			userId,
+			pandalId
+		})
+
+		useEffect(() => {
+			return cleanup
+		}, [cleanup])
+
+		const handleFavoriteChange = (isFavorite: boolean) => {
+			if (isCheckingFavorite) {
+				return
+			}
+			toggleFavorite(isFavorite)
+		}
 
 		return (
 			<View className="relative h-[190px] overflow-hidden rounded-2xl bg-gray-100">
@@ -47,8 +72,17 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 						width={imageWidth}
 					/>
 				</View>
+				<FavoriteButton
+					className="absolute top-2.5 left-2.5 z-20"
+					error={error}
+					isDebouncing={isDebouncing}
+					isFavorited={isFavorited}
+					isLoading={isUpdating || isCheckingFavorite}
+					onFavoriteChange={handleFavoriteChange}
+					size={40}
+				/>
 				<View
-					className="absolute top-2 right-2 bottom-2 rounded-xl bg-gray-100 px-3 py-2"
+					className="absolute top-2 right-2 bottom-2 rounded-xl bg-gray-100 px-3.5 py-1.5"
 					style={{
 						left: '42%',
 						shadowColor: '#000',
@@ -82,9 +116,9 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 								{clubname}
 							</Text>
 						)}
-						{safeRating > 0 && (
+						{rating && rating > 0 && (
 							<View className="mb-2">
-								<RatingSection rating={safeRating} />
+								<RatingSection rating={rating} />
 							</View>
 						)}
 						{theme && (

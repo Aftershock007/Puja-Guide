@@ -1,7 +1,9 @@
 import { Link } from 'expo-router'
-import { memo, useMemo } from 'react'
+import { memo, useEffect, useMemo } from 'react'
 import { Text, View } from 'react-native'
+import { useFavorites } from '@/hooks/useFavourites'
 import type { Pandals } from '@/types/dbTypes'
+import FavoriteButton from './FavoriteButton'
 import ImageCarousel from './ImageCarousel'
 import NearestPandals from './NearestPandals'
 import RatingSection from './RatingSection'
@@ -16,6 +18,7 @@ interface VerticalLayoutProps {
 	onImageContainerLayout: (width: number) => void
 	allPandals: Pandals[]
 	onNearestPandalPress?: (pandal: Pandals) => void
+	userId: string
 }
 
 const VerticalLayout = memo<VerticalLayoutProps>(
@@ -27,9 +30,11 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 		onImageIndexChange,
 		onImageContainerLayout,
 		allPandals,
-		onNearestPandalPress
+		onNearestPandalPress,
+		userId
 	}) => {
 		const {
+			id: pandalId,
 			clubname,
 			description = '',
 			theme = '',
@@ -44,6 +49,30 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 			const safeImages = images || []
 			return safeImages.length > 3 ? safeImages.slice(0, 3) : safeImages
 		}, [images])
+
+		const {
+			isFavorited,
+			isCheckingFavorite,
+			isUpdating,
+			isDebouncing,
+			toggleFavorite,
+			error,
+			cleanup
+		} = useFavorites({
+			userId,
+			pandalId
+		})
+
+		useEffect(() => {
+			return cleanup
+		}, [cleanup])
+
+		const handleFavoriteChange = (isFavorite: boolean) => {
+			if (isCheckingFavorite) {
+				return
+			}
+			toggleFavorite(isFavorite)
+		}
 
 		return (
 			<View className="overflow-hidden rounded-2xl bg-gray-100">
@@ -62,6 +91,15 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 							width={imageWidth}
 						/>
 					</View>
+					<FavoriteButton
+						className="absolute top-2.5 left-2.5 z-20"
+						error={error}
+						isDebouncing={isDebouncing}
+						isFavorited={isFavorited}
+						isLoading={isUpdating || isCheckingFavorite}
+						onFavoriteChange={handleFavoriteChange}
+						size={40}
+					/>
 					<View
 						className="m-3 mt-[-30px] rounded-xl bg-gray-100 px-4 pt-3 pb-2.5"
 						style={{
@@ -139,7 +177,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 							<View className="mb-1 flex flex-row">
 								<Text className="mr-1 font-bold text-[13px]">Socials:</Text>
 								<View className="mt-[1.8px] flex-1">
-									{clubsocialmedialinks.map((clubsocialmedialink) => (
+									{clubsocialmedialinks.map((clubsocialmedialink: string) => (
 										<Link
 											className="text-[11.5px] text-blue-600"
 											href={clubsocialmedialink}

@@ -1,3 +1,4 @@
+import { useUser } from '@clerk/clerk-expo'
 import BottomSheet, { BottomSheetView } from '@gorhom/bottom-sheet'
 import {
 	forwardRef,
@@ -44,6 +45,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		const bottomSheetRef = useRef<BottomSheet>(null)
 		const snapPoints = ['35%', '90%', '90%']
 		const fadeAnim = useRef(new Animated.Value(1)).current
+		const { user } = useUser()
 
 		const [state, setState] = useState({
 			currentImageIndex: 0,
@@ -246,6 +248,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 										onImageIndexChange={handleImageIndexChange}
 										onNearestPandalPress={handleNearestPandalPress}
 										pandal={pandal}
+										userId={String(user?.id)}
 									/>
 								) : (
 									<HorizontalLayout
@@ -255,6 +258,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 										onImageContainerLayout={handleImageContainerLayout}
 										onImageIndexChange={handleImageIndexChange}
 										pandal={pandal}
+										userId={String(user?.id)}
 									/>
 								)}
 							</Animated.View>
