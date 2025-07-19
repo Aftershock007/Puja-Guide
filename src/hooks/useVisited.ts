@@ -136,7 +136,7 @@ export const useVisited = ({
 				} else {
 					removeVisitedMutation.mutate()
 				}
-			}, debounceMs) as unknown as number
+			}, debounceMs)
 		},
 		[addVisitedMutation, removeVisitedMutation, debounceMs]
 	)

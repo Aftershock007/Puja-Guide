@@ -98,9 +98,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		}, [pandal?.images, isVisible])
 
 		const updateState = useCallback((updates: Partial<typeof state>) => {
-			setTimeout(() => {
-				setState((prev) => ({ ...prev, ...updates }))
-			}, 0)
+			setState((prev) => ({ ...prev, ...updates }))
 		}, [])
 
 		const handleNearestPandalPress = useCallback(
@@ -116,65 +114,60 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 
 		const handleSheetChanges = useCallback(
 			(index: number) => {
-				setTimeout(() => {
-					setState((prevState) => {
-						if (prevState.isLayoutTransitioning) {
-							return prevState
-						}
+				setState((prevState) => {
+					if (prevState.isLayoutTransitioning) {
+						return prevState
+					}
 
-						const newIsVerticalLayout =
-							index >= 2 && !prevState.forceHorizontalLayout
-						const oldIsVerticalLayout =
-							prevState.currentSnapIndex >= 2 &&
-							!prevState.forceHorizontalLayout
+					const newIsVerticalLayout =
+						index >= 2 && !prevState.forceHorizontalLayout
+					const oldIsVerticalLayout =
+						prevState.currentSnapIndex >= 2 && !prevState.forceHorizontalLayout
 
-						if (index < 1) {
-							onClose()
-							return prevState
-						}
+					if (index < 1) {
+						onClose()
+						return prevState
+					}
 
-						if (newIsVerticalLayout !== oldIsVerticalLayout) {
-							const newState = { ...prevState, isLayoutTransitioning: true }
-							setState(newState)
+					if (newIsVerticalLayout !== oldIsVerticalLayout) {
+						const newState = { ...prevState, isLayoutTransitioning: true }
+						setState(newState)
 
-							Animated.timing(fadeAnim, {
-								toValue: 0.3,
-								duration: 80,
-								useNativeDriver: true
-							}).start(() => {
-								setTimeout(() => {
+						Animated.timing(fadeAnim, {
+							toValue: 0.3,
+							duration: 80,
+							useNativeDriver: true
+						}).start(() => {
+							setTimeout(() => {
+								setState((prev) => ({
+									...prev,
+									currentSnapIndex: index,
+									imageContainerWidth: 0,
+									forceHorizontalLayout:
+										index < 2 ? false : prev.forceHorizontalLayout
+								}))
+
+								Animated.timing(fadeAnim, {
+									toValue: 1,
+									duration: 120,
+									useNativeDriver: true
+								}).start(() => {
 									setState((prev) => ({
 										...prev,
-										currentSnapIndex: index,
-										imageContainerWidth: 0,
-										forceHorizontalLayout:
-											index < 2 ? false : prev.forceHorizontalLayout
+										isLayoutTransitioning: false
 									}))
-
-									Animated.timing(fadeAnim, {
-										toValue: 1,
-										duration: 120,
-										useNativeDriver: true
-									}).start(() => {
-										setTimeout(() => {
-											setState((prev) => ({
-												...prev,
-												isLayoutTransitioning: false
-											}))
-										}, 0)
-									})
-								}, 0)
-							})
-							return newState
-						}
-						return {
-							...prevState,
-							currentSnapIndex: index,
-							forceHorizontalLayout:
-								index < 2 ? false : prevState.forceHorizontalLayout
-						}
-					})
-				}, 0)
+								})
+							}, 0)
+						})
+						return newState
+					}
+					return {
+						...prevState,
+						currentSnapIndex: index,
+						forceHorizontalLayout:
+							index < 2 ? false : prevState.forceHorizontalLayout
+					}
+				})
 			},
 			[onClose, fadeAnim]
 		)
@@ -182,17 +175,15 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		useEffect(() => {
 			if (isVisible) {
 				InteractionManager.runAfterInteractions(() => {
-					setTimeout(() => {
-						bottomSheetRef.current?.expand()
-						setState({
-							currentImageIndex: 0,
-							imageContainerWidth: 0,
-							currentSnapIndex: 1,
-							forceHorizontalLayout: false,
-							isLayoutTransitioning: false
-						})
-						fadeAnim.setValue(1)
-					}, 0)
+					bottomSheetRef.current?.expand()
+					setState({
+						currentImageIndex: 0,
+						imageContainerWidth: 0,
+						currentSnapIndex: 1,
+						forceHorizontalLayout: false,
+						isLayoutTransitioning: false
+					})
+					fadeAnim.setValue(1)
 				})
 			} else {
 				bottomSheetRef.current?.close()

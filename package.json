@@ -8,7 +8,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "biome": "npx @biomejs/biome check --write",
-    "gen-types": "npx supabase gen types typescript --project-id pxwxparjvfyjgyhdtsww > src/types/database.types.ts"
+    "gen-types": "npx supabase login && npx supabase gen types typescript --project-id pxwxparjvfyjgyhdtsww > src/types/database.types.ts"
   },
   "dependencies": {
     "@clerk/clerk-expo": "^2.14.1",

@@ -103,7 +103,7 @@ const ImageCarousel = memo<ImageCarouselProps>(
 						<PaginationDot
 							imageUrl={imageUrl}
 							isActive={index === safeCurrentIndex}
-							key={`dot-${imageUrl}-${index}`}
+							key={`dot-${imageUrl}`}
 						/>
 					))}
 				</View>

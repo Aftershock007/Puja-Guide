@@ -126,7 +126,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 						size={40}
 					/>
 					<View
-						className="absolute top-[25%] right-0 left-0 z-20 flex flex-row justify-center"
+						className="absolute top-[23.7%] right-0 left-0 z-20 flex flex-row justify-center"
 						style={{
 							alignItems: 'center'
 						}}

@@ -56,9 +56,7 @@ export default function HomeScreen() {
 	}
 
 	const handlePandalNavigate = (newPandal: Pandals) => {
-		setTimeout(() => {
-			setSelectedPandal(newPandal)
-		}, 0)
+		setSelectedPandal(newPandal)
 	}
 
 	if (isLoading) {
