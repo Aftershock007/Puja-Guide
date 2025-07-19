@@ -2,12 +2,14 @@ import { Link } from 'expo-router'
 import { memo, useEffect, useMemo } from 'react'
 import { Text, View } from 'react-native'
 import { useFavorites } from '@/hooks/useFavourites'
+import { useVisited } from '@/hooks/useVisited'
 import type { Pandals } from '@/types/dbTypes'
 import FavoriteButton from './FavoriteButton'
 import ImageCarousel from './ImageCarousel'
 import NearestPandals from './NearestPandals'
 import RatingSection from './RatingSection'
 import StarRatingPicker from './StarRatingPicker'
+import VisitedButton from './VisitedButton'
 
 interface VerticalLayoutProps {
 	pandal: Pandals
@@ -53,19 +55,35 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 		const {
 			isFavorited,
 			isCheckingFavorite,
-			isUpdating,
-			isDebouncing,
+			isUpdating: isFavoriteUpdating,
+			isDebouncing: isFavoriteDebouncing,
 			toggleFavorite,
-			error,
-			cleanup
+			error: favoriteError,
+			cleanup: favoriteCleanup
 		} = useFavorites({
 			userId,
 			pandalId
 		})
 
+		const {
+			isVisited,
+			isCheckingVisited,
+			isUpdating: isVisitedUpdating,
+			isDebouncing: isVisitedDebouncing,
+			toggleVisited,
+			error: visitedError,
+			cleanup: visitedCleanup
+		} = useVisited({
+			userId,
+			pandalId
+		})
+
 		useEffect(() => {
-			return cleanup
-		}, [cleanup])
+			return () => {
+				favoriteCleanup()
+				visitedCleanup()
+			}
+		}, [favoriteCleanup, visitedCleanup])
 
 		const handleFavoriteChange = (isFavorite: boolean) => {
 			if (isCheckingFavorite) {
@@ -74,11 +92,18 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 			toggleFavorite(isFavorite)
 		}
 
+		const handleVisitedChange = (visited: boolean) => {
+			if (isCheckingVisited) {
+				return
+			}
+			toggleVisited(visited)
+		}
+
 		return (
 			<View className="overflow-hidden rounded-2xl bg-gray-100">
 				<View className="flex-col">
 					<View
-						className="relative h-60"
+						className="relative h-[202px]"
 						onLayout={(e) => onImageContainerLayout(e.nativeEvent.layout.width)}
 					>
 						<ImageCarousel
@@ -93,13 +118,27 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 					</View>
 					<FavoriteButton
 						className="absolute top-2.5 left-2.5 z-20"
-						error={error}
-						isDebouncing={isDebouncing}
+						error={favoriteError}
+						isDebouncing={isFavoriteDebouncing}
 						isFavorited={isFavorited}
-						isLoading={isUpdating || isCheckingFavorite}
+						isLoading={isFavoriteUpdating || isCheckingFavorite}
 						onFavoriteChange={handleFavoriteChange}
 						size={40}
 					/>
+					<View
+						className="absolute top-[25%] right-0 left-0 z-20 flex flex-row justify-center"
+						style={{
+							alignItems: 'center'
+						}}
+					>
+						<VisitedButton
+							error={visitedError}
+							isDebouncing={isVisitedDebouncing}
+							isLoading={isVisitedUpdating || isCheckingVisited}
+							isVisited={isVisited}
+							onVisitedChange={handleVisitedChange}
+						/>
+					</View>
 					<View
 						className="m-3 mt-[-30px] rounded-xl bg-gray-100 px-4 pt-3 pb-2.5"
 						style={{
@@ -127,7 +166,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 								backgroundColor: 'transparent'
 							}}
 						/>
-						<View className="mb-2 flex flex-col items-start">
+						<View className="mt-2 mb-2 flex flex-col items-start">
 							<Text className="mb-[1.2px] font-bold text-2xl" numberOfLines={1}>
 								{clubname}
 							</Text>
@@ -201,12 +240,21 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 								borderTopColor: 'rgba(255, 255, 255, 0.8)'
 							}}
 						/>
-						<View className="flex flex-row items-center">
+						<View className="flex flex-row items-center justify-between">
 							<Text className="mt-[1px] mr-1 font-bold text-[13px]">
 								Rate this pandal:
 							</Text>
 							<StarRatingPicker starSize={30} />
 						</View>
+						{/* <View className="mt-1 mb-0.5 flex flex-row justify-center">
+							<VisitedButton
+								error={visitedError}
+								isDebouncing={isVisitedDebouncing}
+								isLoading={isVisitedUpdating || isCheckingVisited}
+								isVisited={isVisited}
+								onVisitedChange={handleVisitedChange}
+							/>
+						</View> */}
 					</View>
 					<NearestPandals
 						allPandals={allPandals}

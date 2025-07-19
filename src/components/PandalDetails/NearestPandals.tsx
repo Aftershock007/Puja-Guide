@@ -74,7 +74,7 @@ const NearestPandals = memo<NearestPandalsProps>(
 
 		return (
 			<View className="mx-3 mb-3 h-[200px]">
-				<Text className="mb-3 ml-[2px] font-bold text-[13.5px]">
+				<Text className="mb-2 ml-[2px] font-bold text-[13.5px]">
 					Nearest Pandals:
 				</Text>
 				<ScrollView
@@ -91,7 +91,7 @@ const NearestPandals = memo<NearestPandalsProps>(
 							onPress={() => onPandalPress?.(pandal)}
 						>
 							<View
-								className="flex-row items-center justify-between rounded-lg bg-white px-3 py-2"
+								className="flex-row items-center justify-between rounded-lg bg-white px-3 py-[6px]"
 								style={{
 									shadowColor: '#000',
 									shadowOffset: { width: 0, height: 1 },

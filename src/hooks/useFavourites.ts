@@ -3,7 +3,7 @@ import { useCallback, useRef, useState } from 'react'
 import { Alert } from 'react-native'
 import useSupabase from '@/lib/supabase'
 
-const DEBOUNCE_TIME = 5000
+const DEBOUNCE_TIME = 1000
 
 interface UseFavoritesProps {
 	userId: string
