@@ -47,7 +47,6 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 		const fadeAnim = useRef(new Animated.Value(1)).current
 		const { user } = useUser()
 
-		// UI Store
 		const {
 			currentImageIndex,
 			imageContainerWidth,

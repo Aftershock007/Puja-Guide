@@ -18,7 +18,7 @@ interface UIActions {
 	setIsLayoutTransitioning: (transitioning: boolean) => void
 	setIsVisible: (visible: boolean) => void
 	resetUI: () => void
-	updateState: (updates: Partial<UIState>) => void // Added this function
+	updateState: (updates: Partial<UIState>) => void
 }
 
 const initialState: UIState = {

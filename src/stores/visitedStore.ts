@@ -50,7 +50,6 @@ export const useVisitedStore = create<VisitedState & VisitedActions>()(
 			const isVisited = visited.has(pandalId)
 			const newState = !isVisited
 
-			// Optimistic update
 			setVisited(pandalId, newState)
 			setDebouncing(pandalId, true)
 
@@ -81,7 +80,6 @@ export const useVisitedStore = create<VisitedState & VisitedActions>()(
 				}
 				setError(pandalId)
 			} catch (error) {
-				// Revert optimistic update
 				setVisited(pandalId, isVisited)
 				const errorMessage =
 					error instanceof Error ? error.message : 'Unknown error'

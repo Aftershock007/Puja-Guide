@@ -1,7 +1,6 @@
 import { memo, useState } from 'react'
-import { Image, View } from 'react-native'
+import { ActivityIndicator, Image, View } from 'react-native'
 import { imageCache } from '../../utils/ImageCacheUtils'
-import LoadingOverlay from './LoadingOverlay'
 
 interface OptimizedImageProps {
 	uri: string
@@ -56,7 +55,11 @@ const OptimizedImage = memo<OptimizedImageProps>(
 					source={{ uri, cache: 'force-cache' }}
 					style={{ width, height }}
 				/>
-				{isLoading && <LoadingOverlay />}
+				{isLoading && (
+					<View className="absolute inset-0 items-center justify-center">
+						<ActivityIndicator color="black" size="small" />
+					</View>
+				)}
 			</View>
 		)
 	}

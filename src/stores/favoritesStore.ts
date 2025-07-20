@@ -50,7 +50,6 @@ export const useFavoritesStore = create<FavoritesState & FavoritesActions>()(
 			const isFavorite = favorites.has(pandalId)
 			const newState = !isFavorite
 
-			// Optimistic update
 			setFavorite(pandalId, newState)
 			setDebouncing(pandalId, true)
 
@@ -75,7 +74,6 @@ export const useFavoritesStore = create<FavoritesState & FavoritesActions>()(
 				}
 				setError(pandalId)
 			} catch (error) {
-				// Revert optimistic update
 				setFavorite(pandalId, isFavorite)
 				const errorMessage =
 					error instanceof Error ? error.message : 'Unknown error'

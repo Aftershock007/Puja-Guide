@@ -53,14 +53,12 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 			return safeImages.length > 3 ? safeImages.slice(0, 3) : safeImages
 		}, [images])
 
-		// Favorites store selectors
 		const favorites = useFavoritesStore((state) => state.favorites)
 		const favoritesLoading = useFavoritesStore((state) => state.loading)
 		const favoritesDebouncing = useFavoritesStore((state) => state.debouncing)
 		const favoritesErrors = useFavoritesStore((state) => state.errors)
 		const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite)
 
-		// Visited store selectors
 		const visited = useVisitedStore((state) => state.visited)
 		const visitedLoading = useVisitedStore((state) => state.loading)
 		const visitedDebouncing = useVisitedStore((state) => state.debouncing)
@@ -69,7 +67,6 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 
 		const supabase = useSupabaseStore((state) => state.supabase)
 
-		// Derived state
 		const isFavorited = favorites.has(pandalId)
 		const isFavoriteLoading = favoritesLoading.has(pandalId)
 		const isFavoriteDebouncing = favoritesDebouncing.has(pandalId)
@@ -106,7 +103,6 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 							height={imageHeight}
 							images={displayImages}
 							onImageIndexChange={onImageIndexChange}
-							paginationPosition="bottom-center"
 							showPagination={displayImages.length > 1}
 							width={imageWidth}
 						/>
@@ -166,12 +162,16 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 								{clubname}
 							</Text>
 						</View>
-						{rating && (
+						{rating && rating > 0 && (
 							<View className="mb-2 flex flex-row items-start">
 								<Text className="mt-[-1.5px] mr-1 font-bold text-[13px]">
 									Rating:
 								</Text>
-								<RatingSection rating={rating} />
+								<RatingSection
+									pandalId={pandalId}
+									rating={rating}
+									showCount={true}
+								/>
 							</View>
 						)}
 						{theme && (
@@ -235,11 +235,15 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 								borderTopColor: 'rgba(255, 255, 255, 0.8)'
 							}}
 						/>
-						<View className="flex flex-row items-center justify-between">
-							<Text className="mt-[1px] mr-1 font-bold text-[13px]">
+						<View className="flex flex-row items-center">
+							<Text className="mt-[2px] mr-1 font-bold text-[13px]">
 								Rate this pandal:
 							</Text>
-							<StarRatingPicker starSize={30} />
+							<StarRatingPicker
+								pandalId={pandalId}
+								starSize={30}
+								userId={userId}
+							/>
 						</View>
 					</View>
 					<NearestPandals

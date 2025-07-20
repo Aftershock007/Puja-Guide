@@ -1,11 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
 import { useRef, useState } from 'react'
-import { ActivityIndicator, Text, View } from 'react-native'
+import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native'
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps'
 import CustomMarker from '@/components/Maps/CustomMarker'
 import PandalDetails from '@/components/PandalDetails/PandalDetails'
 import useSupabase from '@/lib/supabase'
-import { fetchPandals } from '@/service/fetchPandalService'
+import { usePandalStore } from '@/stores/pandalStore'
 import type { Pandals } from '@/types/dbTypes'
 
 interface PandalDetailsRef {
@@ -20,20 +19,17 @@ const INITIAL_REGION = {
 }
 
 export default function HomeScreen() {
-	const [selectedPandal, setSelectedPandal] = useState<Pandals | null>(null)
+	const supabase = useSupabase()
 	const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false)
 	const pandalDetailsRef = useRef<PandalDetailsRef>(null)
 	const markerPressedRef = useRef(false)
-	const supabase = useSupabase()
 
-	const {
-		data: pandals,
-		isLoading,
-		error
-	} = useQuery({
-		queryKey: ['pandals'],
-		queryFn: () => fetchPandals(supabase)
-	})
+	const pandals = usePandalStore((state) => state.pandals)
+	const selectedPandal = usePandalStore((state) => state.selectedPandal)
+	const loading = usePandalStore((state) => state.loading)
+	const error = usePandalStore((state) => state.error)
+	const setSelectedPandal = usePandalStore((state) => state.setSelectedPandal)
+	const retryFetch = usePandalStore((state) => state.retryFetch)
 
 	const handleMarkerPress = (pandal: Pandals) => {
 		markerPressedRef.current = true
@@ -59,7 +55,13 @@ export default function HomeScreen() {
 		setSelectedPandal(newPandal)
 	}
 
-	if (isLoading) {
+	const handleRetry = () => {
+		if (supabase) {
+			retryFetch(supabase)
+		}
+	}
+
+	if (loading && pandals.length === 0) {
 		return (
 			<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
 				<ActivityIndicator color="black" size="large" />
@@ -68,15 +70,30 @@ export default function HomeScreen() {
 		)
 	}
 
-	if (error) {
+	if (error && pandals.length === 0) {
 		return (
-			<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-				<Text
-					onPress={() => window.location.reload()}
-					style={{ color: 'blue' }}
-				>
-					Tap to retry
+			<View
+				style={{
+					flex: 1,
+					justifyContent: 'center',
+					alignItems: 'center',
+					padding: 20
+				}}
+			>
+				<Text style={{ fontSize: 16, textAlign: 'center', marginBottom: 20 }}>
+					Failed to load pandals: {error}
 				</Text>
+				<TouchableOpacity
+					onPress={handleRetry}
+					style={{
+						backgroundColor: '#007AFF',
+						paddingHorizontal: 20,
+						paddingVertical: 10,
+						borderRadius: 8
+					}}
+				>
+					<Text style={{ color: 'white', fontWeight: 'bold' }}>Retry</Text>
+				</TouchableOpacity>
 			</View>
 		)
 	}
@@ -91,7 +108,7 @@ export default function HomeScreen() {
 				showsUserLocation
 				style={{ width: '100%', height: '91.3%' }}
 			>
-				{(pandals || []).map((pandal: Pandals) => (
+				{pandals.map((pandal: Pandals) => (
 					<CustomMarker
 						key={pandal.id}
 						{...pandal}
@@ -99,9 +116,25 @@ export default function HomeScreen() {
 					/>
 				))}
 			</MapView>
+
+			{loading && pandals.length > 0 && (
+				<View
+					style={{
+						position: 'absolute',
+						top: 50,
+						right: 20,
+						backgroundColor: 'rgba(0,0,0,0.7)',
+						padding: 8,
+						borderRadius: 20
+					}}
+				>
+					<ActivityIndicator color="white" size="small" />
+				</View>
+			)}
+
 			{selectedPandal && (
 				<PandalDetails
-					allPandals={pandals || []}
+					allPandals={pandals}
 					isVisible={isBottomSheetVisible}
 					onClose={handleBottomSheetClose}
 					onPandalNavigate={handlePandalNavigate}

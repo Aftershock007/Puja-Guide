@@ -13,9 +13,8 @@ interface ImageCarouselProps {
 	width: number
 	height: number
 	currentImageIndex: number
-	onImageIndexChange: (index: number) => void
+	onImageIndexChange?: (index: number) => void
 	showPagination?: boolean
-	paginationPosition?: 'bottom-right' | 'bottom-center'
 }
 
 const ImageCarousel = memo<ImageCarouselProps>(
@@ -25,8 +24,7 @@ const ImageCarousel = memo<ImageCarouselProps>(
 		height,
 		currentImageIndex,
 		onImageIndexChange,
-		showPagination = true,
-		paginationPosition
+		showPagination = true
 	}) => {
 		const flatListRef = useRef<FlatList>(null)
 
@@ -35,10 +33,15 @@ const ImageCarousel = memo<ImageCarouselProps>(
 		}, [currentImageIndex, images.length])
 
 		useEffect(() => {
-			if (currentImageIndex >= images.length && images.length > 0) {
+			if (
+				showPagination &&
+				currentImageIndex >= images.length &&
+				images.length > 0 &&
+				onImageIndexChange
+			) {
 				onImageIndexChange(0)
 			}
-		}, [images.length, currentImageIndex, onImageIndexChange])
+		}, [images.length, currentImageIndex, onImageIndexChange, showPagination])
 
 		const onScroll = useCallback(
 			(event: NativeSyntheticEvent<NativeScrollEvent>) => {
@@ -47,11 +50,22 @@ const ImageCarousel = memo<ImageCarouselProps>(
 
 				const boundedIndex = Math.min(Math.max(0, newIndex), images.length - 1)
 
-				if (boundedIndex !== safeCurrentIndex && boundedIndex < images.length) {
+				if (
+					showPagination &&
+					boundedIndex !== safeCurrentIndex &&
+					boundedIndex < images.length &&
+					onImageIndexChange
+				) {
 					onImageIndexChange(boundedIndex)
 				}
 			},
-			[width, safeCurrentIndex, onImageIndexChange, images.length]
+			[
+				width,
+				safeCurrentIndex,
+				onImageIndexChange,
+				images.length,
+				showPagination
+			]
 		)
 
 		const renderImage = useCallback(
@@ -92,23 +106,17 @@ const ImageCarousel = memo<ImageCarouselProps>(
 				return null
 			}
 
-			const positionClass =
-				paginationPosition === 'bottom-center'
-					? 'absolute bottom-9 left-0 right-0 flex-row justify-center z-10'
-					: 'absolute right-3 bottom-6 left-0 flex-row justify-end z-10'
-
 			return (
-				<View className={positionClass}>
+				<View className="absolute right-4 bottom-10 left-0 z-10 flex-row justify-end">
 					{images.map((imageUrl, index) => (
-						<PaginationDot
-							imageUrl={imageUrl}
-							isActive={index === safeCurrentIndex}
+						<View
+							className={`mx-1 h-2 w-2 rounded-full ${index === safeCurrentIndex ? 'bg-white' : 'bg-white/50'}`}
 							key={`dot-${imageUrl}`}
 						/>
 					))}
 				</View>
 			)
-		}, [images, safeCurrentIndex, showPagination, paginationPosition])
+		}, [images, safeCurrentIndex, showPagination])
 
 		if (images.length === 0) {
 			return null

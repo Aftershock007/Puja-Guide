@@ -33,7 +33,6 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 			return images && images.length > 0 ? [images[0]] : []
 		}, [images])
 
-		// Zustand store selectors
 		const favorites = useFavoritesStore((state) => state.favorites)
 		const loading = useFavoritesStore((state) => state.loading)
 		const debouncing = useFavoritesStore((state) => state.debouncing)
@@ -41,7 +40,6 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 		const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite)
 		const supabase = useSupabaseStore((state) => state.supabase)
 
-		// Derived state
 		const isFavorited = favorites.has(pandalId)
 		const isLoading = loading.has(pandalId)
 		const isDebouncing = debouncing.has(pandalId)
@@ -64,8 +62,6 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 						currentImageIndex={0}
 						height={imageHeight}
 						images={displayImages}
-						onImageIndexChange={() => {}}
-						paginationPosition="bottom-right"
 						showPagination={false}
 						width={imageWidth}
 					/>
@@ -116,7 +112,11 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 						)}
 						{rating && rating > 0 && (
 							<View className="mb-2">
-								<RatingSection rating={rating} />
+								<RatingSection
+									pandalId={pandalId}
+									rating={rating}
+									showCount={true}
+								/>
 							</View>
 						)}
 						{theme && (
@@ -157,7 +157,11 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 							<Text className="mb-1 font-bold text-[12px]">
 								Rate this pandal:
 							</Text>
-							<StarRatingPicker starSize={28} />
+							<StarRatingPicker
+								pandalId={pandalId}
+								starSize={28}
+								userId={userId}
+							/>
 						</View>
 					</View>
 				</View>
