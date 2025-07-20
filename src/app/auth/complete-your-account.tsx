@@ -1,6 +1,5 @@
 import { useUser } from '@clerk/clerk-expo'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'expo-router'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
@@ -22,9 +21,8 @@ import {
 	isValidGender
 } from '@/constants/GenderEnum'
 import { completeDetailsPageHeader } from '@/constants/Headings'
-import useSupabase from '@/lib/supabase'
-import { insertUsers } from '@/service/insertUserService'
-import type { Users } from '@/types/dbTypes'
+import { useSupabaseStore } from '@/hooks/useSupabaseContext'
+import { useUserStore } from '@/stores/userStore'
 
 const formSchema = z.object({
 	full_name: z
@@ -52,8 +50,9 @@ export default function CompleteYourAccountScreen() {
 	const { user, isLoaded } = useUser()
 	const router = useRouter()
 	const insets = useSafeAreaInsets()
-	const supabase = useSupabase()
-	const queryClient = useQueryClient()
+	const supabase = useSupabaseStore((state) => state.supabase)
+
+	const { createUser, isSubmitting, error } = useUserStore()
 
 	const {
 		control,
@@ -67,32 +66,30 @@ export default function CompleteYourAccountScreen() {
 		defaultValues: { full_name: '', age: '', gender: undefined }
 	})
 
-	const { mutate, isPending } = useMutation({
-		mutationFn: (userData: Users) => {
-			return insertUsers(supabase, userData)
-		},
-		onSuccess: () => {
-			queryClient.invalidateQueries({ queryKey: ['users'] })
-		},
-		onError: () => {
-			Alert.alert('Failed to insert user')
-		}
-	})
-
 	const onSubmit = async (data: FormData) => {
+		if (!(supabase && user)) {
+			return
+		}
+
 		const { full_name, age, gender } = data
+
 		try {
-			await user?.update({
+			await user.update({
 				unsafeMetadata: { full_name, age, gender, onboarding_completed: true }
 			})
-			await user?.reload()
-			mutate({
-				id: user?.id || '',
-				name: user?.fullName || '',
-				email: user?.primaryEmailAddress?.emailAddress || '',
-				age: Number(age),
-				gender
-			})
+			await user.reload()
+
+			await createUser(
+				{
+					id: user.id,
+					name: user.fullName || full_name,
+					email: user.primaryEmailAddress?.emailAddress || '',
+					age: Number(age),
+					gender
+				},
+				supabase
+			)
+
 			router.push('/(tabs)')
 		} catch {
 			setError('root', {
@@ -106,6 +103,7 @@ export default function CompleteYourAccountScreen() {
 		if (!(isLoaded && user)) {
 			return
 		}
+
 		setValue('full_name', user.fullName || '')
 		setValue(
 			'age',
@@ -117,7 +115,13 @@ export default function CompleteYourAccountScreen() {
 		}
 	}, [isLoaded, user, setValue])
 
-	const isDisabled = isPending || !isValid
+	useEffect(() => {
+		if (error) {
+			Alert.alert('Error', error)
+		}
+	}, [error])
+
+	const isDisabled = isSubmitting || !isValid
 	const buttonStyle = isDisabled ? 'bg-gray-400 opacity-50' : 'bg-black'
 	const textStyle = isDisabled ? 'text-gray-600' : 'text-white'
 
@@ -160,9 +164,9 @@ export default function CompleteYourAccountScreen() {
 						disabled={isDisabled}
 						onPress={handleSubmit(onSubmit)}
 					>
-						{isPending && <ActivityIndicator color="white" size="small" />}
+						{isSubmitting && <ActivityIndicator color="white" size="small" />}
 						<Text className={textStyle}>
-							{isPending ? 'Loading...' : 'Complete Account'}
+							{isSubmitting ? 'Loading...' : 'Complete Account'}
 						</Text>
 					</TouchableOpacity>
 				</View>

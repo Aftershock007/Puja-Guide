@@ -2,9 +2,11 @@ import { useUser } from '@clerk/clerk-expo'
 import { useEffect } from 'react'
 import { useSupabaseStore } from '@/hooks/useSupabaseContext'
 import useSupabase from '@/lib/supabase'
+import { useAuthStore } from '@/stores/authStore'
 import { useFavoritesStore } from '@/stores/favoritesStore'
 import { usePandalStore } from '@/stores/pandalStore'
 import { useRatingsStore } from '@/stores/ratingsStore'
+import { useUserStore } from '@/stores/userStore'
 import { useVisitedStore } from '@/stores/visitedStore'
 
 export const useStoreInitializer = () => {
@@ -24,6 +26,8 @@ export const useStoreInitializer = () => {
 	const clearVisited = useVisitedStore((state) => state.clearVisited)
 	const clearRatings = useRatingsStore((state) => state.clearRatings)
 	const clearPandals = usePandalStore((state) => state.clearPandals)
+	const clearUser = useUserStore((state) => state.clearUser)
+	const clearAuthState = useAuthStore((state) => state.clearAuthState)
 
 	useEffect(() => {
 		setSupabase(supabase)
@@ -47,6 +51,8 @@ export const useStoreInitializer = () => {
 			clearFavorites()
 			clearVisited()
 			clearRatings()
+			clearUser()
+			clearAuthState()
 		}
 	}, [
 		user?.id,
@@ -57,7 +63,9 @@ export const useStoreInitializer = () => {
 		loadUserRatings,
 		clearFavorites,
 		clearVisited,
-		clearRatings
+		clearRatings,
+		clearUser,
+		clearAuthState
 	])
 
 	useEffect(() => {
@@ -66,6 +74,16 @@ export const useStoreInitializer = () => {
 			clearVisited()
 			clearRatings()
 			clearPandals()
+			clearUser()
+			clearAuthState()
 		}
-	}, [supabase, clearFavorites, clearVisited, clearRatings, clearPandals])
+	}, [
+		supabase,
+		clearFavorites,
+		clearVisited,
+		clearRatings,
+		clearPandals,
+		clearUser,
+		clearAuthState
+	])
 }

@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 import { Marker } from 'react-native-maps'
 import type { Pandals } from '@/types/dbTypes'
@@ -7,17 +8,18 @@ interface CustomMarkerProps extends Pandals {
 	onPress?: () => void
 }
 
-export default function CustomMarker({
-	onPress,
-	...pandal
-}: CustomMarkerProps) {
-	if (!pandal) {
+const CustomMarker = memo<CustomMarkerProps>(({ onPress, ...pandal }) => {
+	if (!(pandal?.latitude && pandal?.longitude)) {
 		return null
 	}
-	const validRating = Math.max(0, Math.min(5, pandal?.rating || 0))
-	const truncateTitle = (title: string, x: number): string =>
-		title?.length > x ? `${title.slice(0, x).trimEnd()}...` : title
-	const displayTitle = truncateTitle(pandal?.clubname, 15)
+
+	const validRating = Math.max(0, Math.min(5, pandal.rating || 0))
+	const truncateTitle = (title: string, maxLength: number): string =>
+		title?.length > maxLength
+			? `${title.slice(0, maxLength).trimEnd()}...`
+			: title
+	const displayTitle = truncateTitle(pandal.clubname, 15)
+
 	const handlePress = (event: any) => {
 		event.stopPropagation?.()
 		onPress?.()
@@ -26,10 +28,10 @@ export default function CustomMarker({
 	return (
 		<Marker
 			coordinate={{
-				latitude: pandal?.latitude || 0,
-				longitude: pandal?.longitude || 0
+				latitude: pandal.latitude,
+				longitude: pandal.longitude
 			}}
-			key={pandal?.id}
+			key={pandal.id}
 			onPress={handlePress}
 		>
 			<TouchableOpacity
@@ -57,4 +59,8 @@ export default function CustomMarker({
 			</TouchableOpacity>
 		</Marker>
 	)
-}
+})
+
+CustomMarker.displayName = 'CustomMarker'
+
+export default CustomMarker
