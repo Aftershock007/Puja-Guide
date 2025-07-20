@@ -60,14 +60,18 @@ export const useFavoritesStore = create<FavoritesState & FavoritesActions>()(
 						user_id: userId,
 						pandal_id: pandalId
 					})
-					if (error) throw error
+					if (error) {
+						throw error
+					}
 				} else {
 					const { error } = await supabase
 						.from('user_favourites')
 						.delete()
 						.eq('user_id', userId)
 						.eq('pandal_id', pandalId)
-					if (error) throw error
+					if (error) {
+						throw error
+					}
 				}
 				setError(pandalId)
 			} catch (error) {
@@ -92,12 +96,14 @@ export const useFavoritesStore = create<FavoritesState & FavoritesActions>()(
 					.select('pandal_id')
 					.eq('user_id', userId)
 
-				if (error) throw error
+				if (error) {
+					throw error
+				}
 
 				const favoriteIds = new Set(data?.map((item) => item.pandal_id) || [])
 				set({ favorites: favoriteIds, initialized: true })
-			} catch (error) {
-				console.error('Failed to load favorites:', error)
+			} catch {
+				Alert.alert('Error', 'Failed to load favorites')
 				set({ initialized: true })
 			}
 		},

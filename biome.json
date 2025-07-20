@@ -21,6 +21,11 @@
       }
     }
   },
+  "css": {
+    "linter": {
+      "enabled": false
+    }
+  },
   "javascript": {
     "formatter": {
       "quoteStyle": "single",

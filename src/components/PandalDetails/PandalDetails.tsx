@@ -56,8 +56,6 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			isLayoutTransitioning,
 			setCurrentImageIndex,
 			setImageContainerWidth,
-			setCurrentSnapIndex,
-			setForceHorizontalLayout,
 			setIsLayoutTransitioning,
 			resetUI,
 			updateState
@@ -113,7 +111,9 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 
 		const handleSheetChanges = useCallback(
 			(index: number) => {
-				if (isLayoutTransitioning) return
+				if (isLayoutTransitioning) {
+					return
+				}
 
 				const newIsVerticalLayout = index >= 2 && !forceHorizontalLayout
 				const oldIsVerticalLayout =

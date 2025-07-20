@@ -80,13 +80,17 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 		const isVisitedDebouncing = visitedDebouncing.has(pandalId)
 		const visitedError = visitedErrors.get(pandalId)
 
-		const handleFavoriteChange = (isFavorite: boolean) => {
-			if (isFavoriteLoading || !supabase) return
+		const handleFavoriteChange = () => {
+			if (isFavoriteLoading || !supabase) {
+				return
+			}
 			toggleFavorite(pandalId, userId, supabase)
 		}
 
-		const handleVisitedChange = (visitedState: boolean) => {
-			if (isVisitedLoading || !supabase) return
+		const handleVisitedChange = () => {
+			if (isVisitedLoading || !supabase) {
+				return
+			}
 			toggleVisited(pandalId, userId, supabase)
 		}
 

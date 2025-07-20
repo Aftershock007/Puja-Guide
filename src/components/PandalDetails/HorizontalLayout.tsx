@@ -47,8 +47,10 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 		const isDebouncing = debouncing.has(pandalId)
 		const error = errors.get(pandalId)
 
-		const handleFavoriteChange = (isFavorite: boolean) => {
-			if (isLoading || !supabase) return
+		const handleFavoriteChange = () => {
+			if (isLoading || !supabase) {
+				return
+			}
 			toggleFavorite(pandalId, userId, supabase)
 		}
 

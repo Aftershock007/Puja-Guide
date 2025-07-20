@@ -34,7 +34,9 @@ export const usePandalStore = create<PandalState & PandalActions>()(
 			set({ loading: true, error: null })
 			try {
 				const { data, error } = await supabase.from('pandals').select('*')
-				if (error) throw error
+				if (error) {
+					throw error
+				}
 				set({ pandals: data || [], loading: false, initialized: true })
 			} catch (error) {
 				set({

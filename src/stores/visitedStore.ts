@@ -66,7 +66,9 @@ export const useVisitedStore = create<VisitedState & VisitedActions>()(
 							ignoreDuplicates: true
 						}
 					)
-					if (error) throw error
+					if (error) {
+						throw error
+					}
 				} else {
 					const { error } = await supabase
 						.from('user_visited')
@@ -106,8 +108,8 @@ export const useVisitedStore = create<VisitedState & VisitedActions>()(
 
 				const visitedIds = new Set(data?.map((item) => item.pandal_id) || [])
 				set({ visited: visitedIds, initialized: true })
-			} catch (error) {
-				console.error('Failed to load visited:', error)
+			} catch {
+				Alert.alert('Error', 'Failed to load visited')
 				set({ initialized: true })
 			}
 		},
