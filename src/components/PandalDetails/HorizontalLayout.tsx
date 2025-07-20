@@ -1,6 +1,7 @@
-import { memo, useEffect, useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import { Text, View } from 'react-native'
-import { useFavorites } from '@/hooks/useFavourites'
+import { useSupabaseStore } from '@/hooks/useSupabaseContext'
+import { useFavoritesStore } from '@/stores/favoritesStore'
 import type { Pandals } from '@/types/dbTypes'
 import FavoriteButton from './FavoriteButton'
 import ImageCarousel from './ImageCarousel'
@@ -32,28 +33,23 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 			return images && images.length > 0 ? [images[0]] : []
 		}, [images])
 
-		const {
-			isFavorited,
-			isCheckingFavorite,
-			isUpdating,
-			isDebouncing,
-			toggleFavorite,
-			error,
-			cleanup
-		} = useFavorites({
-			userId,
-			pandalId
-		})
+		// Zustand store selectors
+		const favorites = useFavoritesStore((state) => state.favorites)
+		const loading = useFavoritesStore((state) => state.loading)
+		const debouncing = useFavoritesStore((state) => state.debouncing)
+		const errors = useFavoritesStore((state) => state.errors)
+		const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite)
+		const supabase = useSupabaseStore((state) => state.supabase)
 
-		useEffect(() => {
-			return cleanup
-		}, [cleanup])
+		// Derived state
+		const isFavorited = favorites.has(pandalId)
+		const isLoading = loading.has(pandalId)
+		const isDebouncing = debouncing.has(pandalId)
+		const error = errors.get(pandalId)
 
 		const handleFavoriteChange = (isFavorite: boolean) => {
-			if (isCheckingFavorite) {
-				return
-			}
-			toggleFavorite(isFavorite)
+			if (isLoading || !supabase) return
+			toggleFavorite(pandalId, userId, supabase)
 		}
 
 		return (
@@ -77,7 +73,7 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 					error={error}
 					isDebouncing={isDebouncing}
 					isFavorited={isFavorited}
-					isLoading={isUpdating || isCheckingFavorite}
+					isLoading={isLoading}
 					onFavoriteChange={handleFavoriteChange}
 					size={40}
 				/>

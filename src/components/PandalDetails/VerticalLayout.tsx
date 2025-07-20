@@ -1,8 +1,9 @@
 import { Link } from 'expo-router'
-import { memo, useEffect, useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import { Text, View } from 'react-native'
-import { useFavorites } from '@/hooks/useFavourites'
-import { useVisited } from '@/hooks/useVisited'
+import { useSupabaseStore } from '@/hooks/useSupabaseContext'
+import { useFavoritesStore } from '@/stores/favoritesStore'
+import { useVisitedStore } from '@/stores/visitedStore'
 import type { Pandals } from '@/types/dbTypes'
 import FavoriteButton from './FavoriteButton'
 import ImageCarousel from './ImageCarousel'
@@ -52,51 +53,41 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 			return safeImages.length > 3 ? safeImages.slice(0, 3) : safeImages
 		}, [images])
 
-		const {
-			isFavorited,
-			isCheckingFavorite,
-			isUpdating: isFavoriteUpdating,
-			isDebouncing: isFavoriteDebouncing,
-			toggleFavorite,
-			error: favoriteError,
-			cleanup: favoriteCleanup
-		} = useFavorites({
-			userId,
-			pandalId
-		})
+		// Favorites store selectors
+		const favorites = useFavoritesStore((state) => state.favorites)
+		const favoritesLoading = useFavoritesStore((state) => state.loading)
+		const favoritesDebouncing = useFavoritesStore((state) => state.debouncing)
+		const favoritesErrors = useFavoritesStore((state) => state.errors)
+		const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite)
 
-		const {
-			isVisited,
-			isCheckingVisited,
-			isUpdating: isVisitedUpdating,
-			isDebouncing: isVisitedDebouncing,
-			toggleVisited,
-			error: visitedError,
-			cleanup: visitedCleanup
-		} = useVisited({
-			userId,
-			pandalId
-		})
+		// Visited store selectors
+		const visited = useVisitedStore((state) => state.visited)
+		const visitedLoading = useVisitedStore((state) => state.loading)
+		const visitedDebouncing = useVisitedStore((state) => state.debouncing)
+		const visitedErrors = useVisitedStore((state) => state.errors)
+		const toggleVisited = useVisitedStore((state) => state.toggleVisited)
 
-		useEffect(() => {
-			return () => {
-				favoriteCleanup()
-				visitedCleanup()
-			}
-		}, [favoriteCleanup, visitedCleanup])
+		const supabase = useSupabaseStore((state) => state.supabase)
+
+		// Derived state
+		const isFavorited = favorites.has(pandalId)
+		const isFavoriteLoading = favoritesLoading.has(pandalId)
+		const isFavoriteDebouncing = favoritesDebouncing.has(pandalId)
+		const favoriteError = favoritesErrors.get(pandalId)
+
+		const isVisited = visited.has(pandalId)
+		const isVisitedLoading = visitedLoading.has(pandalId)
+		const isVisitedDebouncing = visitedDebouncing.has(pandalId)
+		const visitedError = visitedErrors.get(pandalId)
 
 		const handleFavoriteChange = (isFavorite: boolean) => {
-			if (isCheckingFavorite) {
-				return
-			}
-			toggleFavorite(isFavorite)
+			if (isFavoriteLoading || !supabase) return
+			toggleFavorite(pandalId, userId, supabase)
 		}
 
-		const handleVisitedChange = (visited: boolean) => {
-			if (isCheckingVisited) {
-				return
-			}
-			toggleVisited(visited)
+		const handleVisitedChange = (visitedState: boolean) => {
+			if (isVisitedLoading || !supabase) return
+			toggleVisited(pandalId, userId, supabase)
 		}
 
 		return (
@@ -121,7 +112,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 						error={favoriteError}
 						isDebouncing={isFavoriteDebouncing}
 						isFavorited={isFavorited}
-						isLoading={isFavoriteUpdating || isCheckingFavorite}
+						isLoading={isFavoriteLoading}
 						onFavoriteChange={handleFavoriteChange}
 						size={40}
 					/>
@@ -134,7 +125,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 						<VisitedButton
 							error={visitedError}
 							isDebouncing={isVisitedDebouncing}
-							isLoading={isVisitedUpdating || isCheckingVisited}
+							isLoading={isVisitedLoading}
 							isVisited={isVisited}
 							onVisitedChange={handleVisitedChange}
 						/>
@@ -246,15 +237,6 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 							</Text>
 							<StarRatingPicker starSize={30} />
 						</View>
-						{/* <View className="mt-1 mb-0.5 flex flex-row justify-center">
-							<VisitedButton
-								error={visitedError}
-								isDebouncing={isVisitedDebouncing}
-								isLoading={isVisitedUpdating || isCheckingVisited}
-								isVisited={isVisited}
-								onVisitedChange={handleVisitedChange}
-							/>
-						</View> */}
 					</View>
 					<NearestPandals
 						allPandals={allPandals}
