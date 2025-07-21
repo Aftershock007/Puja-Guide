@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
-import { Marker } from 'react-native-maps'
+import { Marker, type MarkerPressEvent } from 'react-native-maps'
 import type { Pandals } from '@/types/dbTypes'
 import StarRating from '../PandalDetails/StarRating'
 
@@ -20,7 +20,7 @@ const CustomMarker = memo<CustomMarkerProps>(({ onPress, ...pandal }) => {
 			: title
 	const displayTitle = truncateTitle(pandal.clubname, 15)
 
-	const handlePress = (event: any) => {
+	const handlePress = (event: MarkerPressEvent) => {
 		event.stopPropagation?.()
 		onPress?.()
 	}
@@ -34,11 +34,7 @@ const CustomMarker = memo<CustomMarkerProps>(({ onPress, ...pandal }) => {
 			key={pandal.id}
 			onPress={handlePress}
 		>
-			<TouchableOpacity
-				activeOpacity={0.8}
-				onPress={handlePress}
-				style={{ zIndex: 1000 }}
-			>
+			<TouchableOpacity activeOpacity={0.8} style={{ zIndex: 1000 }}>
 				<View className="items-center">
 					<View className="min-h-[36px] max-w-[150px] gap-0.5 rounded-xl bg-black px-3 py-2">
 						<Text className="text-white">{displayTitle}</Text>

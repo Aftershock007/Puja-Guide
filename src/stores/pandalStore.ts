@@ -79,11 +79,9 @@ export const usePandalStore = create<PandalState & PandalActions>()(
 					isInitialized: true,
 					error: null
 				})
-			} catch (error) {
-				const errorMessage =
-					error instanceof Error ? error.message : 'Failed to load pandals'
+			} catch {
 				set({
-					error: errorMessage,
+					error: 'Failed to load pandals',
 					loading: false,
 					isInitialized: true
 				})

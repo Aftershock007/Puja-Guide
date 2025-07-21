@@ -1,5 +1,10 @@
 import { memo, useCallback } from 'react'
-import { type Control, Controller } from 'react-hook-form'
+import {
+	type Control,
+	Controller,
+	type FieldPath,
+	type FieldValues
+} from 'react-hook-form'
 import { Text, TouchableOpacity, View } from 'react-native'
 
 interface OptionData {
@@ -14,12 +19,12 @@ interface OptionProps {
 	isSelected: boolean
 }
 
-interface RadioButtonInputProps {
-	control: Control<any>
+interface RadioButtonInputProps<T extends FieldValues = FieldValues> {
+	control: Control<T>
 	placeholder?: string
 	required?: boolean
 	label: string
-	name: string
+	name: FieldPath<T>
 	options: OptionData[]
 }
 
@@ -46,41 +51,47 @@ const Option = memo<OptionProps>(
 
 Option.displayName = 'Option'
 
-const RadioButtonInput = memo<RadioButtonInputProps>(
-	({ control, placeholder, required, label, name, options }) => {
-		return (
-			<Controller
-				control={control}
-				name={name}
-				render={({ field: { onChange, value }, fieldState: { error } }) => (
-					<View className="w-full gap-1.5">
-						<Text className="font-medium text-sm">
-							{label}
-							{required && <Text className="text-red-600">*</Text>}
-						</Text>
-						{placeholder && (
-							<Text className="text-gray-500 text-sm">{placeholder}</Text>
-						)}
-						<View className="mt-1.5 flex-row gap-2.5">
-							{options.map((option) => (
-								<Option
-									isSelected={value === option.value}
-									key={option.value}
-									onChange={onChange}
-									optionLabel={option.label}
-									value={option.value}
-								/>
-							))}
-						</View>
-						{error && <Text className="text-red-500">{error.message}</Text>}
+function RadioButtonInputComponent<T extends FieldValues = FieldValues>({
+	control,
+	placeholder,
+	required,
+	label,
+	name,
+	options
+}: RadioButtonInputProps<T>) {
+	return (
+		<Controller
+			control={control}
+			name={name}
+			render={({ field: { onChange, value }, fieldState: { error } }) => (
+				<View className="w-full gap-1.5">
+					<Text className="font-medium text-sm">
+						{label}
+						{required && <Text className="text-red-600">*</Text>}
+					</Text>
+					{placeholder && (
+						<Text className="text-gray-500 text-sm">{placeholder}</Text>
+					)}
+					<View className="mt-1.5 flex-row gap-2.5">
+						{options.map((option) => (
+							<Option
+								isSelected={value === option.value}
+								key={option.value}
+								onChange={onChange}
+								optionLabel={option.label}
+								value={option.value}
+							/>
+						))}
 					</View>
-				)}
-				rules={{ required: required && 'This field is required!' }}
-			/>
-		)
-	}
-)
+					{error && <Text className="text-red-500">{error.message}</Text>}
+				</View>
+			)}
+			rules={{ required: required && 'This field is required!' }}
+		/>
+	)
+}
 
+const RadioButtonInput = memo(RadioButtonInputComponent)
 RadioButtonInput.displayName = 'RadioButtonInput'
 
 export default RadioButtonInput

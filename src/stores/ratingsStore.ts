@@ -23,7 +23,7 @@ interface RatingsActions {
 		userId: string,
 		supabase: SupabaseClient,
 		updatePandalStore?: (
-			pandalId: string,
+			Id: string,
 			newRating: number,
 			newCount: number
 		) => void
@@ -39,6 +39,134 @@ const initialState: RatingsState = {
 	submittingRatings: [],
 	errors: {},
 	isLoaded: false
+}
+
+const fetchExistingRating = async (
+	supabase: SupabaseClient,
+	userId: string,
+	pandalId: string
+) => {
+	const { data, error } = await supabase
+		.from('user_ratings')
+		.select('rating')
+		.eq('user_id', userId)
+		.eq('pandal_id', pandalId)
+		.maybeSingle()
+
+	if (error) {
+		throw error
+	}
+	return { isUpdate: !!data, oldRating: data?.rating || 0 }
+}
+
+const fetchPandalData = async (supabase: SupabaseClient, pandalId: string) => {
+	const { data, error } = await supabase
+		.from('pandals')
+		.select('rating, number_of_ratings')
+		.eq('id', pandalId)
+		.single()
+
+	if (error) {
+		throw error
+	}
+	return {
+		currentRating: data.rating || 0,
+		currentCount: data.number_of_ratings || 0
+	}
+}
+
+const calculateNewRating = (
+	isUpdate: boolean,
+	currentRating: number,
+	currentCount: number,
+	oldRating: number,
+	newRating: number
+) => {
+	const totalPoints = currentRating * currentCount
+
+	if (isUpdate) {
+		const newTotalPoints = totalPoints - oldRating + newRating
+		return {
+			rating: currentCount > 0 ? newTotalPoints / currentCount : newRating,
+			count: currentCount
+		}
+	}
+	const newTotalPoints = totalPoints + newRating
+	return {
+		rating: newTotalPoints / (currentCount + 1),
+		count: currentCount + 1
+	}
+}
+
+const updatePandalRating = async (
+	supabase: SupabaseClient,
+	pandalId: string,
+	rating: number,
+	count: number
+) => {
+	const finalRating = Math.round(rating * 100) / 100
+	const { error } = await supabase
+		.from('pandals')
+		.update({
+			rating: finalRating,
+			number_of_ratings: count
+		})
+		.eq('id', pandalId)
+
+	if (error) {
+		throw error
+	}
+	return finalRating
+}
+
+const upsertUserRating = async (
+	supabase: SupabaseClient,
+	userId: string,
+	pandalId: string,
+	rating: number
+) => {
+	const { error } = await supabase.from('user_ratings').upsert(
+		{
+			user_id: userId,
+			pandal_id: pandalId,
+			rating,
+			updated_at: new Date().toISOString()
+		},
+		{
+			onConflict: 'user_id,pandal_id'
+		}
+	)
+
+	if (error) {
+		throw error
+	}
+}
+
+const buildRatingsObject = (
+	data: Array<{ pandal_id: string; rating: number }> | null
+) => {
+	const ratingsObject: Record<string, number> = {}
+
+	if (data) {
+		for (const ratingData of data) {
+			ratingsObject[ratingData.pandal_id] = ratingData.rating
+		}
+	}
+
+	return ratingsObject
+}
+
+const updateSubmittingList = (
+	submittingList: string[],
+	pandalId: string,
+	isSubmitting: boolean
+) => {
+	if (isSubmitting) {
+		return submittingList.includes(pandalId)
+			? submittingList
+			: [...submittingList, pandalId]
+	}
+	return submittingList.filter((id) => id !== pandalId)
 }
 
 export const useRatingsStore = create<RatingsState & RatingsActions>()(
@@ -74,80 +202,31 @@ export const useRatingsStore = create<RatingsState & RatingsActions>()(
 				setError(pandalId)
 
 				try {
-					const { data: existingRating, error: checkError } = await supabase
-						.from('user_ratings')
-						.select('rating')
-						.eq('user_id', userId)
-						.eq('pandal_id', pandalId)
-						.maybeSingle()
+					const { isUpdate, oldRating } = await fetchExistingRating(
+						supabase,
+						userId,
+						pandalId
+					)
+					const { currentRating, currentCount } = await fetchPandalData(
+						supabase,
+						pandalId
+					)
 
-					if (checkError) {
-						throw checkError
-					}
+					const { rating: newRating, count: newCount } = calculateNewRating(
+						isUpdate,
+						currentRating,
+						currentCount,
+						oldRating,
+						rating
+					)
 
-					const isUpdate = !!existingRating
-					const oldRating = existingRating?.rating || 0
-
-					const { data: pandalData, error: pandalError } = await supabase
-						.from('pandals')
-						.select('rating, number_of_ratings')
-						.eq('id', pandalId)
-						.single()
-
-					if (pandalError) {
-						throw pandalError
-					}
-
-					const currentRating = pandalData.rating || 0
-					const currentCount = pandalData.number_of_ratings || 0
-
-					let newRating: number
-					let newCount: number
-
-					if (isUpdate) {
-						const totalPoints = currentRating * currentCount
-						const newTotalPoints = totalPoints - oldRating + rating
-						newRating =
-							currentCount > 0 ? newTotalPoints / currentCount : rating
-						newCount = currentCount
-					} else {
-						const totalPoints = currentRating * currentCount
-						const newTotalPoints = totalPoints + rating
-						newCount = currentCount + 1
-						newRating = newTotalPoints / newCount
-					}
-
-					const finalRating = Math.round(newRating * 100) / 100
-
-					const { error: updatePandalError } = await supabase
-						.from('pandals')
-						.update({
-							rating: finalRating,
-							number_of_ratings: newCount
-						})
-						.eq('id', pandalId)
-
-					if (updatePandalError) {
-						throw updatePandalError
-					}
-
-					const { error: upsertError } = await supabase
-						.from('user_ratings')
-						.upsert(
-							{
-								user_id: userId,
-								pandal_id: pandalId,
-								rating,
-								updated_at: new Date().toISOString()
-							},
-							{
-								onConflict: 'user_id,pandal_id'
-							}
-						)
-
-					if (upsertError) {
-						throw upsertError
-					}
+					const finalRating = await updatePandalRating(
+						supabase,
+						pandalId,
+						newRating,
+						newCount
+					)
+					await upsertUserRating(supabase, userId, pandalId, rating)
 
 					setUserRating(pandalId, rating)
 
@@ -155,12 +234,11 @@ export const useRatingsStore = create<RatingsState & RatingsActions>()(
 						updatePandalStore(pandalId, finalRating, newCount)
 					}
 				} catch (submissionError) {
-					setError(
-						pandalId,
+					const errorMessage =
 						submissionError instanceof Error
 							? submissionError.message
 							: 'Failed to submit rating'
-					)
+					setError(pandalId, errorMessage)
 				} finally {
 					setSubmitting(pandalId, false)
 				}
@@ -177,13 +255,7 @@ export const useRatingsStore = create<RatingsState & RatingsActions>()(
 						throw error
 					}
 
-					const ratingsObject: Record<string, number> = {}
-
-					if (data) {
-						for (const ratingData of data) {
-							ratingsObject[ratingData.pandal_id] = ratingData.rating
-						}
-					}
+					const ratingsObject = buildRatingsObject(data)
 
 					set({
 						userRatings: ratingsObject,
@@ -201,15 +273,12 @@ export const useRatingsStore = create<RatingsState & RatingsActions>()(
 			setSubmitting: (pandalId, isSubmitting) => {
 				set((state) => {
 					const submittingList = state.submittingRatings || []
-					if (isSubmitting) {
-						return {
-							submittingRatings: submittingList.includes(pandalId)
-								? submittingList
-								: [...submittingList, pandalId]
-						}
-					}
 					return {
-						submittingRatings: submittingList.filter((id) => id !== pandalId)
+						submittingRatings: updateSubmittingList(
+							submittingList,
+							pandalId,
+							isSubmitting
+						)
 					}
 				})
 			},

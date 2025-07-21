@@ -6,7 +6,6 @@ import {
 	View
 } from 'react-native'
 import OptimizedImage from './OptimizedImage'
-import PaginationDot from './PaginationDot'
 
 interface ImageCarouselProps {
 	images: string[]
