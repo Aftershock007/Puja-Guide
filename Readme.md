@@ -1,9 +1,9 @@
 # Tasks
-- Auth
-- Map integration
-- Pandal Card
-- DB connection (Firebase/ Supabase)
-- Global state management (Zustand)
+- Auth (done)
+- Map integration (done)
+- Pandal Card (done)
+- DB connection (Supabase) (done)
+- Global state management (Zustand) (done)
 - Add favourites tab
 - Add all pandals tab (region wise)
 - Find nearest pandal and give a shortest route using AI

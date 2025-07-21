@@ -1,12 +1,13 @@
+import '../../../global.css'
 import { useAuth, useUser } from '@clerk/clerk-expo'
 import { Ionicons } from '@expo/vector-icons'
+import AntDesign from '@expo/vector-icons/AntDesign'
+import FontAwesome from '@expo/vector-icons/FontAwesome'
+import MaterialIcons from '@expo/vector-icons/MaterialIcons'
 import { Redirect, Tabs } from 'expo-router'
-import { Platform, useColorScheme } from 'react-native'
-import { Colors } from '@/constants/Colors'
-import '../../../global.css'
+import { Platform } from 'react-native'
 
 export default function TabLayout() {
-	const colorScheme = useColorScheme()
 	const { user } = useUser()
 	const { isSignedIn } = useAuth()
 
@@ -20,19 +21,21 @@ export default function TabLayout() {
 	return (
 		<Tabs
 			screenOptions={{
-				tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+				tabBarActiveTintColor: 'black',
 				headerShown: false,
 				tabBarStyle: Platform.select({
 					ios: {
 						position: 'absolute',
 						height: 75,
 						paddingBottom: 5,
-						paddingTop: 5
+						paddingTop: 5,
+						backgroundColor: 'white'
 					},
 					default: {
 						height: 60,
 						paddingBottom: 5,
-						paddingTop: 5
+						paddingTop: 5,
+						backgroundColor: 'white'
 					}
 				})
 			}}
@@ -40,18 +43,52 @@ export default function TabLayout() {
 			<Tabs.Screen
 				name="index"
 				options={{
-					title: 'Home',
-					tabBarIcon: ({ color }) => (
-						<Ionicons color={color} name="home" size={25} />
+					title: 'Map',
+					tabBarIcon: ({ color, focused }) => (
+						<AntDesign
+							color={color}
+							name={focused ? 'enviroment' : 'enviromento'}
+							size={25}
+						/>
 					)
 				}}
 			/>
 			<Tabs.Screen
-				name="settings"
+				name="allPandals"
 				options={{
-					title: 'Settings',
-					tabBarIcon: ({ color }) => (
-						<Ionicons color={color} name="settings-outline" size={25} />
+					title: 'All Pandals',
+					tabBarIcon: ({ color, focused }) => (
+						<Ionicons
+							color={color}
+							name={focused ? 'book' : 'book-outline'}
+							size={25}
+						/>
+					)
+				}}
+			/>
+			<Tabs.Screen
+				name="favorites"
+				options={{
+					title: 'Favorites',
+					tabBarIcon: ({ color, focused }) => (
+						<MaterialIcons
+							color={color}
+							name={focused ? 'favorite' : 'favorite-border'}
+							size={25}
+						/>
+					)
+				}}
+			/>
+			<Tabs.Screen
+				name="profile"
+				options={{
+					title: 'Profile',
+					tabBarIcon: ({ color, focused }) => (
+						<FontAwesome
+							color={color}
+							name={focused ? 'user' : 'user-o'}
+							size={24}
+						/>
 					)
 				}}
 			/>

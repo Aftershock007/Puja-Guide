@@ -1,6 +1,6 @@
+import '../../../global.css'
 import { useAuth, useUser } from '@clerk/clerk-expo'
 import { Redirect, Stack, usePathname } from 'expo-router'
-import '../../../global.css'
 
 export default function AuthLayout() {
 	const { user } = useUser()

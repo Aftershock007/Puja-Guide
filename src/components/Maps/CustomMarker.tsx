@@ -1,6 +1,8 @@
+import { useUser } from '@clerk/clerk-expo'
 import { memo } from 'react'
 import { Text, TouchableOpacity, View } from 'react-native'
 import { Marker, type MarkerPressEvent } from 'react-native-maps'
+import { useVisitedStore } from '@/stores/visitedStore'
 import type { Pandals } from '@/types/dbTypes'
 import StarRating from '../PandalDetails/StarRating'
 
@@ -9,6 +11,9 @@ interface CustomMarkerProps extends Pandals {
 }
 
 const CustomMarker = memo<CustomMarkerProps>(({ onPress, ...pandal }) => {
+	const { user } = useUser()
+	const visited = useVisitedStore((state) => state.visited)
+
 	if (!(pandal?.latitude && pandal?.longitude)) {
 		return null
 	}
@@ -19,6 +24,13 @@ const CustomMarker = memo<CustomMarkerProps>(({ onPress, ...pandal }) => {
 			? `${title.slice(0, maxLength).trimEnd()}...`
 			: title
 	const displayTitle = truncateTitle(pandal.clubname, 15)
+
+	const isVisited = user?.id ? visited.has(pandal.id) : false
+
+	const markerBgClass = isVisited ? 'bg-gray-700 opacity-50' : 'bg-black'
+	const arrowColorClass = isVisited
+		? 'border-t-gray-700 opacity-50'
+		: 'border-t-black'
 
 	const handlePress = (event: MarkerPressEvent) => {
 		event.stopPropagation?.()
@@ -36,7 +48,9 @@ const CustomMarker = memo<CustomMarkerProps>(({ onPress, ...pandal }) => {
 		>
 			<TouchableOpacity activeOpacity={0.8} style={{ zIndex: 1000 }}>
 				<View className="items-center">
-					<View className="min-h-[36px] max-w-[150px] gap-0.5 rounded-xl bg-black px-3 py-2">
+					<View
+						className={`min-h-[36px] max-w-[150px] gap-0.5 rounded-xl px-3 py-2 ${markerBgClass}`}
+					>
 						<Text className="text-white">{displayTitle}</Text>
 						<View className="flex-row items-center justify-start gap-1">
 							<StarRating rating={validRating} />
@@ -50,7 +64,9 @@ const CustomMarker = memo<CustomMarkerProps>(({ onPress, ...pandal }) => {
 							</Text>
 						</View>
 					</View>
-					<View className="-mt-0.5 h-0 w-0 self-center border-t-[10px] border-t-black border-r-[10px] border-r-transparent border-l-[10px] border-l-transparent" />
+					<View
+						className={`h-0 w-0 self-center border-t-[10px] border-r-[10px] border-r-transparent border-l-[10px] border-l-transparent ${arrowColorClass}`}
+					/>
 				</View>
 			</TouchableOpacity>
 		</Marker>
