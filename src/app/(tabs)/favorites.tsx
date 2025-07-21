@@ -5,13 +5,11 @@ import {
 	ActivityIndicator,
 	Dimensions,
 	FlatList,
-	RefreshControl,
 	Text,
 	View
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import HorizontalLayout from '@/components/PandalDetails/HorizontalLayout'
-import { useSupabaseStore } from '@/hooks/useSupabaseContext'
 import { useFavoritesStore } from '@/stores/favoritesStore'
 import { usePandalStore } from '@/stores/pandalStore'
 import { useUIStore } from '@/stores/uiStore'
@@ -30,8 +28,6 @@ export default function FavoritesScreen() {
 	const favorites = useFavoritesStore((state) => state.favorites)
 	const pandals = usePandalStore((state) => state.pandals)
 	const pandalLoading = usePandalStore((state) => state.loading)
-	const loadPandals = usePandalStore((state) => state.loadPandals)
-	const supabase = useSupabaseStore((state) => state.supabase)
 
 	const favoritePandals = useMemo(() => {
 		if (!favorites || favorites.size === 0) {
@@ -53,12 +49,6 @@ export default function FavoritesScreen() {
 		},
 		[setImageContainerWidth]
 	)
-
-	const handleRefresh = useCallback(() => {
-		if (supabase) {
-			loadPandals(supabase, true)
-		}
-	}, [loadPandals, supabase])
 
 	const renderFavoritePandal = useCallback(
 		({ item }: { item: Pandals }) => (
