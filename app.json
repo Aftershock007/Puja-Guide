@@ -17,6 +17,10 @@
       "supportsTablet": true,
       "config": {
         "googleMapsApiKey": "process.env.GOOGLE_MAPS_API_KEY"
+      },
+      "infoPlist": {
+        "NSLocationWhenInUseUsageDescription": "PujaGuide uses your location to show distances to nearby pandals and help you find the closest puja celebrations.",
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "PujaGuide uses your location to show distances to nearby pandals and help you find the closest puja celebrations."
       }
     },
     "android": {
@@ -29,6 +33,7 @@
           "apiKey": "process.env.GOOGLE_MAPS_API_KEY"
         }
       },
+      "permissions": ["ACCESS_COARSE_LOCATION", "ACCESS_FINE_LOCATION"],
       "edgeToEdgeEnabled": true
     },
     "web": {
@@ -36,6 +41,18 @@
       "bundler": "metro",
       "output": "server"
     },
-    "plugins": ["expo-router", "expo-font"]
+    "plugins": [
+      "expo-router",
+      "expo-font",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "PujaGuide uses your location to show distances to nearby pandals and help you find the closest puja celebrations.",
+          "isIosBackgroundLocationEnabled": false,
+          "isAndroidBackgroundLocationEnabled": false,
+          "isAndroidForegroundServiceEnabled": false
+        }
+      ]
+    ]
   }
 }

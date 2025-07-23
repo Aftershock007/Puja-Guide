@@ -117,7 +117,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 						size={40}
 					/>
 					<View
-						className="absolute top-[23.7%] right-0 left-0 z-20 flex flex-row justify-center"
+						className="absolute top-2.5 right-2.5 z-20"
 						style={{
 							alignItems: 'center'
 						}}
@@ -131,7 +131,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 						/>
 					</View>
 					<View
-						className="m-3 mt-[-30px] rounded-xl bg-gray-100 px-4 pt-3 pb-2.5"
+						className="m-3 mt-[-30px] rounded-xl bg-gray-100 px-3.5 pt-2 pb-2"
 						style={{
 							shadowColor: '#000',
 							shadowOffset: { width: -6, height: -6 },
@@ -157,7 +157,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 								backgroundColor: 'transparent'
 							}}
 						/>
-						<View className="mt-2 mb-2 flex flex-col items-start">
+						<View className="mb-2 flex flex-col items-start">
 							<Text className="mb-[1.2px] font-bold text-2xl" numberOfLines={1}>
 								{clubname}
 							</Text>
@@ -224,7 +224,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 							</View>
 						)}
 						<View
-							className="my-2 h-[1.5px]"
+							className="my-1.5 h-[1.5px]"
 							style={{
 								backgroundColor: '#e5e7eb',
 								shadowColor: '#000',
@@ -249,7 +249,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 					<NearestPandals
 						allPandals={allPandals}
 						currentPandal={pandal}
-						limit={7}
+						limit={6}
 						onPandalPress={onNearestPandalPress}
 					/>
 				</View>

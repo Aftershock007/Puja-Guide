@@ -114,9 +114,9 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 					return
 				}
 
-				const newIsVerticalLayout = index >= 2 && !forceHorizontalLayout
+				const newIsVerticalLayout = index >= 1 && !forceHorizontalLayout
 				const oldIsVerticalLayout =
-					currentSnapIndex >= 2 && !forceHorizontalLayout
+					currentSnapIndex >= 1 && !forceHorizontalLayout
 
 				if (index < 1) {
 					onClose()
@@ -135,7 +135,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 							updateState({
 								currentSnapIndex: index,
 								imageContainerWidth: 0,
-								forceHorizontalLayout: index < 2 ? false : forceHorizontalLayout
+								forceHorizontalLayout: index < 1 ? false : forceHorizontalLayout
 							})
 
 							Animated.timing(fadeAnim, {
@@ -152,7 +152,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 
 				updateState({
 					currentSnapIndex: index,
-					forceHorizontalLayout: index < 2 ? false : forceHorizontalLayout
+					forceHorizontalLayout: index < 1 ? false : forceHorizontalLayout
 				})
 			},
 			[

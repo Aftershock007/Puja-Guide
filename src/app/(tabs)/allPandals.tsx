@@ -11,16 +11,21 @@ import {
 	View
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import PandalCard from '@/components/PandalCard/PandalCard'
 import PandalDetails, {
 	type PandalDetailsRef
 } from '@/components/PandalDetails/PandalDetails'
+import {
+	type PandalWithDistance,
+	useLocationDistanceTracker
+} from '@/hooks/useLocationDistanceTracker'
 import { useSupabaseStore } from '@/hooks/useSupabaseContext'
 import { useFavoritesStore } from '@/stores/favoritesStore'
 import { usePandalStore } from '@/stores/pandalStore'
 import { useVisitedStore } from '@/stores/visitedStore'
 import type { Pandals } from '@/types/dbTypes'
 
-type SortOption = 'name' | 'rating' | 'popularity'
+type SortOption = 'name' | 'rating' | 'popularity' | 'distance'
 
 interface SortConfig {
 	label: string
@@ -30,7 +35,8 @@ interface SortConfig {
 const SORT_OPTIONS: SortConfig[] = [
 	{ label: 'Sort by Name (A-Z)', value: 'name' },
 	{ label: 'Sort by Rating', value: 'rating' },
-	{ label: 'Most Popular', value: 'popularity' }
+	{ label: 'Most Popular', value: 'popularity' },
+	{ label: 'Sort by Distance', value: 'distance' }
 ]
 
 export default function AllPandalsScreen() {
@@ -40,31 +46,40 @@ export default function AllPandalsScreen() {
 	const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false)
 	const [sortBy, setSortBy] = useState<SortOption>('name')
 	const [showSortModal, setShowSortModal] = useState(false)
+	const [loading, setLoading] = useState(false)
 	const pandalDetailsRef = useRef<PandalDetailsRef>(null)
 	const searchInputRef = useRef<TextInput>(null)
 
 	const pandals = usePandalStore((state) => state.pandals)
-	const loading = usePandalStore((state) => state.loading)
 	const error = usePandalStore((state) => state.error)
 	const loadPandals = usePandalStore((state) => state.loadPandals)
 	const favorites = useFavoritesStore((state) => state.favorites)
 	const visited = useVisitedStore((state) => state.visited)
 	const supabase = useSupabaseStore((state) => state.supabase)
 
+	const {
+		pandalsWithDistance,
+		userLocation,
+		locationPermission,
+		isLoadingLocation,
+		locationError,
+		refreshLocation
+	} = useLocationDistanceTracker(pandals, 30_000)
+
 	const filteredPandals = useMemo(() => {
 		if (!searchQuery.trim()) {
-			return pandals
+			return pandalsWithDistance
 		}
 
 		const query = searchQuery.toLowerCase().trim()
-		return pandals.filter(
+		return pandalsWithDistance.filter(
 			(pandal) =>
 				pandal.clubname?.toLowerCase().includes(query) ||
 				pandal.address?.toLowerCase().includes(query) ||
 				pandal.theme?.toLowerCase().includes(query) ||
 				pandal.artistname?.toLowerCase().includes(query)
 		)
-	}, [pandals, searchQuery])
+	}, [pandalsWithDistance, searchQuery])
 
 	const sortedPandals = useMemo(() => {
 		const sorted = [...filteredPandals]
@@ -80,6 +95,8 @@ export default function AllPandalsScreen() {
 				return sorted.sort(
 					(a, b) => (b.number_of_ratings || 0) - (a.number_of_ratings || 0)
 				)
+			case 'distance':
+				return sorted.sort((a, b) => a.distance - b.distance)
 			default:
 				return sorted
 		}
@@ -99,11 +116,17 @@ export default function AllPandalsScreen() {
 		setSelectedPandal(newPandal)
 	}, [])
 
-	const handleRefresh = useCallback(() => {
-		if (supabase) {
-			loadPandals(supabase, true)
+	const handleRefresh = useCallback(async () => {
+		setLoading(true)
+		try {
+			if (supabase) {
+				await loadPandals(supabase, true)
+			}
+			refreshLocation()
+		} finally {
+			setLoading(false)
 		}
-	}, [loadPandals, supabase])
+	}, [loadPandals, supabase, refreshLocation])
 
 	const handleSortSelect = useCallback((option: SortOption) => {
 		setSortBy(option)
@@ -122,100 +145,25 @@ export default function AllPandalsScreen() {
 	}, [sortBy])
 
 	const renderPandalCard = useCallback(
-		({ item: pandal }: { item: Pandals }) => {
+		({ item: pandal }: { item: PandalWithDistance }) => {
 			const isFavorited = favorites.has(pandal.id)
 			const isVisited = visited.has(pandal.id)
 
 			return (
-				<TouchableOpacity
-					activeOpacity={0.7}
+				<PandalCard
 					className="mx-4 mb-2"
-					onPress={() => handlePandalPress(pandal)}
-				>
-					<View
-						className="flex-row items-center justify-between rounded-lg bg-white px-3 py-3"
-						style={{
-							shadowColor: '#000',
-							shadowOffset: { width: 0, height: 1 },
-							shadowOpacity: 0.05,
-							shadowRadius: 3,
-							elevation: 2,
-							borderWidth: 0.5,
-							borderColor: '#E5E7EB'
-						}}
-					>
-						<View className="flex-1">
-							<View className="mb-1 flex-row items-center">
-								<Text
-									className="flex-1 font-semibold text-[14px] text-gray-800"
-									numberOfLines={1}
-								>
-									{pandal.clubname}
-								</Text>
-								<View className="flex-row items-center">
-									{isFavorited && (
-										<View className="rounded-full bg-red-100 px-2 py-1">
-											<Text className="font-bold text-[8px] text-red-700">
-												FAVORITE
-											</Text>
-										</View>
-									)}
-									{isVisited && (
-										<View className="rounded-full bg-green-100 px-2 py-1">
-											<Text className="font-bold text-[8px] text-green-700">
-												VISITED
-											</Text>
-										</View>
-									)}
-									{pandal.rating && pandal.rating > 0 && (
-										<View className="ml-2 flex-row items-center">
-											<Text className="mr-1 text-[#FFD700] text-[12px]">★</Text>
-											<Text className="font-medium text-[12px] text-gray-700">
-												{pandal.rating.toFixed(1)}
-											</Text>
-											{pandal.number_of_ratings &&
-												pandal.number_of_ratings > 0 && (
-													<Text className="ml-1 text-[9px] text-gray-500">
-														({pandal.number_of_ratings})
-													</Text>
-												)}
-										</View>
-									)}
-								</View>
-							</View>
-							{pandal.address && (
-								<Text
-									className="mb-1 text-[11px] text-gray-600"
-									numberOfLines={1}
-								>
-									{pandal.address}
-								</Text>
-							)}
-							{pandal.theme && (
-								<Text className="text-[10px] text-gray-500" numberOfLines={1}>
-									{pandal.theme}
-								</Text>
-							)}
-							{pandal.artistname && (
-								<Text
-									className="mt-0.5 text-[10px] text-gray-500"
-									numberOfLines={1}
-								>
-									{pandal.artistname}
-								</Text>
-							)}
-						</View>
-						<View className="items-end">
-							<Ionicons color="#9CA3AF" name="chevron-forward" size={16} />
-						</View>
-					</View>
-				</TouchableOpacity>
+					isFavorited={isFavorited}
+					isVisited={isVisited}
+					onPress={handlePandalPress}
+					pandal={pandal}
+					userLocation={userLocation}
+				/>
 			)
 		},
-		[favorites, visited, handlePandalPress]
+		[favorites, visited, handlePandalPress, userLocation]
 	)
 
-	const keyExtractor = useCallback((item: Pandals) => item.id, [])
+	const keyExtractor = useCallback((item: PandalWithDistance) => item.id, [])
 
 	const renderEmpty = useCallback(
 		() => (
@@ -262,7 +210,7 @@ export default function AllPandalsScreen() {
 				}}
 			>
 				<ActivityIndicator color="#000" size="large" />
-				<Text className="mt-4 font-medium text-gray-800 text-lg">
+				<Text className="mt-4 font-medium text-black text-lg">
 					Loading pandals...
 				</Text>
 			</View>
@@ -305,11 +253,17 @@ export default function AllPandalsScreen() {
 		>
 			<View className="bg-white px-4 pt-4 pb-2">
 				<Text className="font-bold text-3xl text-gray-900">All Pandals</Text>
-				<Text className="mt-1 text-base text-gray-600">
-					Discover amazing pandals around you
-				</Text>
+				<View className="mt-1 flex-row items-center justify-between">
+					<Text className="text-base text-gray-600">
+						Discover amazing pandals around you
+					</Text>
+					{!(locationPermission || isLoadingLocation) && (
+						<TouchableOpacity onPress={refreshLocation}>
+							<Text className="text-blue-600 text-xs">Enable Location</Text>
+						</TouchableOpacity>
+					)}
+				</View>
 			</View>
-
 			<View className="bg-white px-4 py-4">
 				<View className="relative mb-4">
 					<View className="flex-row items-center rounded-lg bg-gray-100 px-3 py-2">
@@ -332,7 +286,6 @@ export default function AllPandalsScreen() {
 						)}
 					</View>
 				</View>
-
 				<View className="flex-row items-center justify-between">
 					<Text className="font-medium text-[14px] text-gray-700">
 						{searchQuery
@@ -351,7 +304,6 @@ export default function AllPandalsScreen() {
 					</TouchableOpacity>
 				</View>
 			</View>
-
 			<FlatList
 				contentContainerStyle={{
 					flexGrow: 1,
@@ -378,7 +330,19 @@ export default function AllPandalsScreen() {
 				updateCellsBatchingPeriod={50}
 				windowSize={21}
 			/>
-
+			{locationError && (
+				<View className="absolute right-4 bottom-20 left-4 rounded-lg border border-red-400 bg-red-100 p-3">
+					<View className="flex-row items-center">
+						<Ionicons color="#DC2626" name="warning" size={16} />
+						<Text className="ml-2 flex-1 text-red-700 text-sm">
+							{locationError}
+						</Text>
+						<TouchableOpacity onPress={refreshLocation}>
+							<Text className="font-medium text-red-600 text-sm">Retry</Text>
+						</TouchableOpacity>
+					</View>
+				</View>
+			)}
 			{selectedPandal && (
 				<PandalDetails
 					allPandals={pandals}
@@ -389,7 +353,6 @@ export default function AllPandalsScreen() {
 					ref={pandalDetailsRef}
 				/>
 			)}
-
 			<Modal
 				animationType="fade"
 				onRequestClose={() => setShowSortModal(false)}
@@ -414,15 +377,22 @@ export default function AllPandalsScreen() {
 									key={option.value}
 									onPress={() => handleSortSelect(option.value)}
 								>
-									<Text
-										className={`text-base ${
-											sortBy === option.value
-												? 'font-semibold text-black'
-												: 'text-gray-700'
-										}`}
-									>
-										{option.label}
-									</Text>
+									<View className="flex-row items-center">
+										<Text
+											className={`text-base ${
+												sortBy === option.value
+													? 'font-semibold text-black'
+													: 'text-gray-700'
+											}`}
+										>
+											{option.label}
+										</Text>
+										{option.value === 'distance' && !userLocation && (
+											<Text className="ml-2 text-gray-400 text-xs">
+												(Requires location)
+											</Text>
+										)}
+									</View>
 									{sortBy === option.value && (
 										<Ionicons color="#000" name="checkmark" size={20} />
 									)}

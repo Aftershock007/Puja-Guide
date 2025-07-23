@@ -1,15 +1,17 @@
 import { useUser } from '@clerk/clerk-expo'
 import FontAwesome6 from '@expo/vector-icons/FontAwesome6'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import {
 	ActivityIndicator,
 	Dimensions,
 	FlatList,
+	RefreshControl,
 	Text,
 	View
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import HorizontalLayout from '@/components/PandalDetails/HorizontalLayout'
+import { useSupabaseStore } from '@/hooks/useSupabaseContext'
 import { useFavoritesStore } from '@/stores/favoritesStore'
 import { usePandalStore } from '@/stores/pandalStore'
 import { useUIStore } from '@/stores/uiStore'
@@ -21,6 +23,7 @@ const ITEM_HEIGHT = 190
 export default function FavoritesScreen() {
 	const { user } = useUser()
 	const insets = useSafeAreaInsets()
+	const [isLocalRefreshing, setIsLocalRefreshing] = useState(false)
 
 	const { currentImageIndex, setCurrentImageIndex, setImageContainerWidth } =
 		useUIStore()
@@ -28,6 +31,8 @@ export default function FavoritesScreen() {
 	const favorites = useFavoritesStore((state) => state.favorites)
 	const pandals = usePandalStore((state) => state.pandals)
 	const pandalLoading = usePandalStore((state) => state.loading)
+	const loadPandals = usePandalStore((state) => state.loadPandals)
+	const supabase = useSupabaseStore((state) => state.supabase)
 
 	const favoritePandals = useMemo(() => {
 		if (!favorites || favorites.size === 0) {
@@ -49,6 +54,17 @@ export default function FavoritesScreen() {
 		},
 		[setImageContainerWidth]
 	)
+
+	const handleRefresh = useCallback(async () => {
+		if (supabase) {
+			setIsLocalRefreshing(true)
+			try {
+				await loadPandals(supabase, true)
+			} finally {
+				setIsLocalRefreshing(false)
+			}
+		}
+	}, [loadPandals, supabase])
 
 	const renderFavoritePandal = useCallback(
 		({ item }: { item: Pandals }) => (
@@ -152,6 +168,15 @@ export default function FavoritesScreen() {
 				initialNumToRender={4}
 				keyExtractor={keyExtractor}
 				maxToRenderPerBatch={5}
+				refreshControl={
+					<RefreshControl
+						colors={['#000']}
+						onRefresh={handleRefresh}
+						refreshing={isLocalRefreshing}
+						tintColor="#000"
+						titleColor="#666"
+					/>
+				}
 				removeClippedSubviews={true}
 				renderItem={renderFavoritePandal}
 				showsVerticalScrollIndicator={false}

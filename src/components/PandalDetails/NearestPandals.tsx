@@ -1,7 +1,10 @@
 import { memo, useMemo } from 'react'
-import { ScrollView, Text, TouchableOpacity, View } from 'react-native'
+import { ScrollView, Text, View } from 'react-native'
+import PandalCard from '@/components/PandalCard/PandalCard'
+import { useLocationDistanceTracker } from '@/hooks/useLocationDistanceTracker'
+import { useFavoritesStore } from '@/stores/favoritesStore'
+import { useVisitedStore } from '@/stores/visitedStore'
 import type { Pandals } from '@/types/dbTypes'
-import { findNearestPandals, formatDistance } from '@/utils/distanceUtils'
 
 interface NearestPandalsProps {
 	currentPandal: Pandals
@@ -12,23 +15,32 @@ interface NearestPandalsProps {
 
 const NearestPandals = memo<NearestPandalsProps>(
 	({ currentPandal, allPandals, onPandalPress, limit = 10 }) => {
+		const favorites = useFavoritesStore((state) => state.favorites)
+		const visited = useVisitedStore((state) => state.visited)
+
+		const {
+			pandalsWithDistance,
+			userLocation,
+			locationPermission,
+			isLoadingLocation,
+			locationError
+		} = useLocationDistanceTracker(allPandals, 60_000) // Update every 60 seconds
+
 		const nearestPandals = useMemo(() => {
-			if (!allPandals || allPandals.length === 0) {
+			if (!userLocation || pandalsWithDistance.length === 0) {
 				return []
 			}
 
-			const validPandals = allPandals.filter(
-				(pandal) =>
-					pandal.latitude !== null &&
-					pandal.longitude !== null &&
-					typeof pandal.latitude === 'number' &&
-					typeof pandal.longitude === 'number'
+			const validPandals = pandalsWithDistance.filter(
+				(pandal) => pandal.id !== currentPandal.id && pandal.distance > 0
 			)
 
-			return findNearestPandals(currentPandal, validPandals, limit)
-		}, [currentPandal, allPandals, limit])
+			return validPandals
+				.sort((a, b) => a.distance - b.distance)
+				.slice(0, limit)
+		}, [pandalsWithDistance, currentPandal.id, limit, userLocation])
 
-		if (!(currentPandal.latitude && currentPandal.longitude)) {
+		if (isLoadingLocation && !userLocation) {
 			return (
 				<View
 					className="mx-3 mb-3 rounded-xl bg-gray-100 p-4"
@@ -46,7 +58,55 @@ const NearestPandals = memo<NearestPandalsProps>(
 						Nearest Pandals:
 					</Text>
 					<Text className="text-[12px] text-gray-500 italic">
-						Location not available for this pandal
+						Getting your location...
+					</Text>
+				</View>
+			)
+		}
+
+		if (!(locationPermission || isLoadingLocation)) {
+			return (
+				<View
+					className="mx-3 mb-3 rounded-xl bg-gray-100 p-4"
+					style={{
+						shadowColor: '#000',
+						shadowOffset: { width: -4, height: -4 },
+						shadowOpacity: 0.12,
+						shadowRadius: 8,
+						elevation: 6,
+						borderWidth: 1,
+						borderColor: 'rgba(255, 255, 255, 0.8)'
+					}}
+				>
+					<Text className="mb-2 font-bold text-[13.5px] text-black">
+						Nearest Pandals:
+					</Text>
+					<Text className="text-[12px] text-gray-500 italic">
+						Location permission needed to show nearest pandals
+					</Text>
+				</View>
+			)
+		}
+
+		if (locationError) {
+			return (
+				<View
+					className="mx-3 mb-3 rounded-xl bg-gray-100 p-4"
+					style={{
+						shadowColor: '#000',
+						shadowOffset: { width: -4, height: -4 },
+						shadowOpacity: 0.12,
+						shadowRadius: 8,
+						elevation: 6,
+						borderWidth: 1,
+						borderColor: 'rgba(255, 255, 255, 0.8)'
+					}}
+				>
+					<Text className="mb-2 font-bold text-[13.5px] text-black">
+						Nearest Pandals:
+					</Text>
+					<Text className="text-[12px] text-gray-500 italic">
+						Unable to get location
 					</Text>
 				</View>
 			)
@@ -73,84 +133,42 @@ const NearestPandals = memo<NearestPandalsProps>(
 		}
 
 		return (
-			<View className="mx-3 mb-3 h-[200px]">
-				<Text className="mb-2 ml-[2px] font-bold text-[13.5px]">
-					Nearest Pandals:
-				</Text>
-				<ScrollView
-					contentContainerStyle={{ paddingBottom: 10 }}
-					nestedScrollEnabled={true}
-					showsVerticalScrollIndicator={false}
-					style={{ maxHeight: 300 }}
-				>
-					{nearestPandals.map((pandal) => (
-						<TouchableOpacity
-							activeOpacity={0.7}
-							className="mb-2"
-							key={pandal.id}
-							onPress={() => onPandalPress?.(pandal)}
-						>
-							<View
-								className="flex-row items-center justify-between rounded-lg bg-white px-3 py-[6px]"
-								style={{
-									shadowColor: '#000',
-									shadowOffset: { width: 0, height: 1 },
-									shadowOpacity: 0.05,
-									shadowRadius: 3,
-									elevation: 2
-								}}
-							>
-								<View className="mr-2 flex-1">
-									<Text
-										className="font-semibold text-[12px] text-gray-800"
-										numberOfLines={1}
-									>
-										{pandal.clubname}
-									</Text>
-									{pandal.address && (
-										<Text
-											className="mt-0.5 text-[10px] text-gray-600"
-											numberOfLines={1}
-										>
-											{pandal.address}
-										</Text>
-									)}
-									{pandal.theme && (
-										<Text
-											className="mt-0.5 text-[9px] text-gray-500"
-											numberOfLines={1}
-										>
-											Theme: {pandal.theme}
-										</Text>
-									)}
-								</View>
-								<View className="flex-row items-center">
-									{pandal.rating && pandal.rating > 0 && (
-										<View className="mr-2 flex-row items-center">
-											<Text className="mr-1 text-[#FFD700] text-[10px]">★</Text>
-											<Text className="text-[10px] text-gray-700">
-												{pandal.rating.toFixed(1)}
-											</Text>
-										</View>
-									)}
-									<View
-										className="rounded-full bg-blue-100 px-2 py-1"
-										style={{
-											shadowColor: '#3B82F6',
-											shadowOffset: { width: 0, height: 1 },
-											shadowOpacity: 0.1,
-											shadowRadius: 2
-										}}
-									>
-										<Text className="font-bold text-[10px] text-blue-700">
-											{formatDistance(pandal.distance)}
-										</Text>
-									</View>
-								</View>
-							</View>
-						</TouchableOpacity>
-					))}
-				</ScrollView>
+			<View className="mx-3 mb-3">
+				<View className="mb-3 flex-row items-center justify-between">
+					<Text className="ml-[2px] font-bold text-[13.5px]">
+						Nearest Pandals:
+					</Text>
+					{isLoadingLocation && (
+						<View className="flex-row items-center">
+							<View className="mr-1 h-2 w-2 rounded-full bg-blue-500" />
+							<Text className="text-[10px] text-gray-500">Updating...</Text>
+						</View>
+					)}
+				</View>
+				<View style={{ height: 210 }}>
+					<ScrollView
+						nestedScrollEnabled={true}
+						showsVerticalScrollIndicator={false}
+						style={{ flex: 1 }}
+					>
+						{nearestPandals.map((pandal) => {
+							const isFavorited = favorites.has(pandal.id)
+							const isVisited = visited.has(pandal.id)
+
+							return (
+								<PandalCard
+									className="mb-2"
+									isFavorited={isFavorited}
+									isVisited={isVisited}
+									key={pandal.id}
+									onPress={onPandalPress || (() => {})}
+									pandal={pandal}
+									userLocation={userLocation}
+								/>
+							)
+						})}
+					</ScrollView>
+				</View>
 			</View>
 		)
 	}
