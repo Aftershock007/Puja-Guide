@@ -20,7 +20,7 @@ export interface PandalWithDistance extends Pandals {
 
 export function useLocationDistanceTracker(
 	pandals: Pandals[],
-	updateInterval = 60_000
+	updateInterval = 120_000
 ) {
 	const [userLocation, setUserLocation] = useState<UserLocation | null>(null)
 	const [locationPermission, setLocationPermission] = useState(false)

@@ -64,7 +64,7 @@ export default function AllPandalsScreen() {
 		isLoadingLocation,
 		locationError,
 		refreshLocation
-	} = useLocationDistanceTracker(pandals, 30_000)
+	} = useLocationDistanceTracker(pandals, 120_000) // Update every 2 minutes
 
 	const filteredPandals = useMemo(() => {
 		if (!searchQuery.trim()) {

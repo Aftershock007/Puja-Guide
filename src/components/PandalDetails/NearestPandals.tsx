@@ -24,7 +24,7 @@ const NearestPandals = memo<NearestPandalsProps>(
 			locationPermission,
 			isLoadingLocation,
 			locationError
-		} = useLocationDistanceTracker(allPandals, 60_000) // Update every 60 seconds
+		} = useLocationDistanceTracker(allPandals, 120_000) // Update every 2 minutes
 
 		const nearestPandals = useMemo(() => {
 			if (!userLocation || pandalsWithDistance.length === 0) {
