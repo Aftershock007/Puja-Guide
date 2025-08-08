@@ -101,51 +101,40 @@ export default function HomeScreen() {
 
 	if (loading && pandals.length === 0) {
 		return (
-			<View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+			<View className="flex-1 items-center justify-center">
 				<ActivityIndicator color="black" size="large" />
-				<Text style={{ marginTop: 10 }}>Loading pandals...</Text>
+				<Text className="mt-2.5">Loading pandals...</Text>
 			</View>
 		)
 	}
 
 	if (error && pandals.length === 0) {
 		return (
-			<View
-				style={{
-					flex: 1,
-					justifyContent: 'center',
-					alignItems: 'center',
-					padding: 20
-				}}
-			>
-				<Text style={{ fontSize: 16, textAlign: 'center', marginBottom: 20 }}>
+			<View className="flex-1 items-center justify-center p-5">
+				<Text className="mb-5 text-center text-base">
 					Failed to load pandals: {error}
 				</Text>
 				<TouchableOpacity
+					className="rounded-lg bg-blue-500 px-5 py-2.5"
 					onPress={handleRetry}
-					style={{
-						backgroundColor: '#007AFF',
-						paddingHorizontal: 20,
-						paddingVertical: 10,
-						borderRadius: 8
-					}}
 				>
-					<Text style={{ color: 'white', fontWeight: 'bold' }}>Retry</Text>
+					<Text className="font-bold text-white">Retry</Text>
 				</TouchableOpacity>
 			</View>
 		)
 	}
 
 	return (
-		<View style={{ flex: 1 }}>
+		<View className="flex-1">
 			<MapView
+				className="w-full"
 				initialRegion={INITIAL_REGION}
 				onPress={handleMapPress}
 				provider={PROVIDER_GOOGLE}
 				ref={mapRef}
 				showsMyLocationButton
 				showsUserLocation
-				style={{ width: '100%', height: '91.3%' }}
+				style={{ height: '91.3%' }}
 			>
 				{pandals.map((pandal: Pandals) => (
 					<CustomMarker
@@ -157,16 +146,7 @@ export default function HomeScreen() {
 			</MapView>
 
 			{loading && pandals.length > 0 && (
-				<View
-					style={{
-						position: 'absolute',
-						top: 50,
-						right: 20,
-						backgroundColor: 'rgba(0,0,0,0.7)',
-						padding: 8,
-						borderRadius: 20
-					}}
-				>
+				<View className="absolute top-12 right-5 rounded-3xl bg-black/70 p-2">
 					<ActivityIndicator color="white" size="small" />
 				</View>
 			)}
