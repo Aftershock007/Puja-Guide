@@ -80,6 +80,50 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 
 		const [isLoadingDirections, setIsLoadingDirections] = useState(false)
 
+		const checkLocationPermission = async (): Promise<boolean> => {
+			const { status } = await requestForegroundPermissionsAsync()
+			if (status !== 'granted') {
+				Alert.alert(
+					'Permission Denied',
+					'Location permission is required to show directions.',
+					[{ text: 'OK' }]
+				)
+				return false
+			}
+			return true
+		}
+
+		const getCurrentLocation = async () => {
+			return await getCurrentPositionAsync({
+				accuracy: Accuracy.Balanced,
+				timeInterval: 5000,
+				distanceInterval: 0
+			})
+		}
+
+		const validatePandalLocation = (
+			pandalLat: number | null,
+			pandalLng: number | null
+		): boolean => {
+			if (!(pandalLat && pandalLng)) {
+				Alert.alert('Location Error', 'Pandal location is not available.', [
+					{ text: 'OK' }
+				])
+				return false
+			}
+			return true
+		}
+
+		const openMapUrl = async (
+			currentLat: number,
+			currentLng: number,
+			pandalLat: number,
+			pandalLng: number
+		) => {
+			const googleMapsWebUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentLat},${currentLng}&destination=${pandalLat},${pandalLng}&travelmode=driving`
+			await Linking.openURL(googleMapsWebUrl)
+		}
+
 		const isFavorited = favorites.has(pandalId)
 		const isFavoriteLoading = favoritesLoading.has(pandalId)
 		const isFavoriteDebouncing = favoritesDebouncing.has(pandalId)
@@ -107,64 +151,21 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 		const goToMaps = async () => {
 			setIsLoadingDirections(true)
 			try {
-				const { status } = await requestForegroundPermissionsAsync()
-
-				if (status !== 'granted') {
-					Alert.alert(
-						'Permission Denied',
-						'Location permission is required to show directions.',
-						[{ text: 'OK' }]
-					)
-					return
-				}
-
-				const location = await getCurrentPositionAsync({
-					accuracy: Accuracy.Balanced,
-					timeInterval: 5000,
-					distanceInterval: 0
-				})
-
-				const { latitude: currentLat, longitude: currentLng } = location.coords
-
 				const pandalLat = pandal.latitude
 				const pandalLng = pandal.longitude
 
-				if (!(pandalLat && pandalLng)) {
-					Alert.alert('Location Error', 'Pandal location is not available.', [
-						{ text: 'OK' }
-					])
+				if (!validatePandalLocation(pandalLat, pandalLng)) {
+					return
+				}
+				if (!(await checkLocationPermission())) {
 					return
 				}
 
-				const googleMapsAppUrl = Platform.select({
-					ios: `comgooglemaps://?saddr=${currentLat},${currentLng}&daddr=${pandalLat},${pandalLng}&directionsmode=driving`,
-					android: `google.navigation:q=${pandalLat},${pandalLng}&mode=d`
-				})
+				const location = await getCurrentLocation()
+				const { latitude: currentLat, longitude: currentLng } = location.coords
 
-				if (googleMapsAppUrl) {
-					const canOpenGoogleMaps = await Linking.canOpenURL(googleMapsAppUrl)
-					if (canOpenGoogleMaps) {
-						await Linking.openURL(googleMapsAppUrl)
-						return
-					}
-				} else if (Platform.OS === 'ios') {
-					const appleMapsUrl = `maps://app?saddr=${currentLat},${currentLng}&daddr=${pandalLat},${pandalLng}&dirflg=d`
-					const canOpenAppleMaps = await Linking.canOpenURL(appleMapsUrl)
-					if (canOpenAppleMaps) {
-						await Linking.openURL(appleMapsUrl)
-						return
-					}
-				}
-
-				const googleMapsWebUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentLat},${currentLng}&destination=${pandalLat},${pandalLng}&travelmode=driving`
-
-				const canOpenGoogleWeb = await Linking.canOpenURL(googleMapsWebUrl)
-				if (canOpenGoogleWeb) {
-					await Linking.openURL(googleMapsWebUrl)
-				} else {
-					Alert.alert('Error', 'Unable to open maps application.', [
-						{ text: 'OK' }
-					])
+				if (pandalLat && pandalLng) {
+					await openMapUrl(currentLat, currentLng, pandalLat, pandalLng)
 				}
 			} catch {
 				Alert.alert(
@@ -325,28 +326,13 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 						</View>
 						<View className="mt-3 mb-1">
 							<TouchableOpacity
-								activeOpacity={0.8}
+								className={`flex-row items-center justify-center rounded-full bg-black py-2.5 ${
+									isLoadingDirections ? 'opacity-75' : 'opacity-100'
+								}`}
 								disabled={isLoadingDirections}
 								onPress={goToMaps}
-								style={{
-									backgroundColor: isLoadingDirections ? '#666666' : '#000000',
-									paddingVertical: 10,
-									borderRadius: 50,
-									elevation: 8,
-									alignItems: 'center',
-									justifyContent: 'center',
-									flexDirection: 'row',
-									opacity: isLoadingDirections ? 0.7 : 1
-								}}
 							>
-								<Text
-									style={{
-										color: 'white',
-										fontWeight: '600',
-										fontSize: 16,
-										letterSpacing: 0.5
-									}}
-								>
+								<Text className="font-semibold text-base text-white tracking-wide">
 									{isLoadingDirections
 										? 'Getting Location...'
 										: 'Get Directions'}
