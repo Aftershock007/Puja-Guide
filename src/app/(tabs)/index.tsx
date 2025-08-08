@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native'
 import MapView, { PROVIDER_GOOGLE } from 'react-native-maps'
 import CustomMarker from '@/components/Maps/CustomMarker'
@@ -23,6 +23,7 @@ export default function HomeScreen() {
 	const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false)
 	const pandalDetailsRef = useRef<PandalDetailsRef>(null)
 	const markerPressedRef = useRef(false)
+	const mapRef = useRef<MapView>(null)
 
 	const pandals = usePandalStore((state) => state.pandals)
 	const selectedPandal = usePandalStore((state) => state.selectedPandal)
@@ -30,6 +31,30 @@ export default function HomeScreen() {
 	const error = usePandalStore((state) => state.error)
 	const setSelectedPandal = usePandalStore((state) => state.setSelectedPandal)
 	const retryFetch = usePandalStore((state) => state.retryFetch)
+
+	// Automatically show bottom sheet and focus map when a pandal is selected from another tab
+	useEffect(() => {
+		if (selectedPandal && !isBottomSheetVisible) {
+			setIsBottomSheetVisible(true)
+
+			// Focus map camera on the selected pandal
+			if (
+				mapRef.current &&
+				selectedPandal.latitude &&
+				selectedPandal.longitude
+			) {
+				mapRef.current.animateToRegion(
+					{
+						latitude: selectedPandal.latitude,
+						longitude: selectedPandal.longitude,
+						latitudeDelta: 0.04,
+						longitudeDelta: 0.04
+					},
+					1000
+				) // 1 second animation
+			}
+		}
+	}, [selectedPandal, isBottomSheetVisible])
 
 	const handleMarkerPress = (pandal: Pandals) => {
 		markerPressedRef.current = true
@@ -53,6 +78,19 @@ export default function HomeScreen() {
 
 	const handlePandalNavigate = (newPandal: Pandals) => {
 		setSelectedPandal(newPandal)
+
+		// Focus map camera on the new pandal
+		if (mapRef.current && newPandal.latitude && newPandal.longitude) {
+			mapRef.current.animateToRegion(
+				{
+					latitude: newPandal.latitude,
+					longitude: newPandal.longitude,
+					latitudeDelta: 0.04,
+					longitudeDelta: 0.04
+				},
+				1000
+			) // 1 second animation
+		}
 	}
 
 	const handleRetry = () => {
@@ -104,6 +142,7 @@ export default function HomeScreen() {
 				initialRegion={INITIAL_REGION}
 				onPress={handleMapPress}
 				provider={PROVIDER_GOOGLE}
+				ref={mapRef}
 				showsMyLocationButton
 				showsUserLocation
 				style={{ width: '100%', height: '91.3%' }}

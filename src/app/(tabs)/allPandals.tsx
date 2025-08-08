@@ -1,4 +1,5 @@
 import { Ionicons } from '@expo/vector-icons'
+import { router } from 'expo-router'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import {
 	ActivityIndicator,
@@ -12,9 +13,6 @@ import {
 } from 'react-native'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import PandalCard from '@/components/PandalCard/PandalCard'
-import PandalDetails, {
-	type PandalDetailsRef
-} from '@/components/PandalDetails/PandalDetails'
 import {
 	type PandalWithDistance,
 	useLocationDistanceTracker
@@ -42,17 +40,15 @@ const SORT_OPTIONS: SortConfig[] = [
 export default function AllPandalsScreen() {
 	const insets = useSafeAreaInsets()
 	const [searchQuery, setSearchQuery] = useState('')
-	const [selectedPandal, setSelectedPandal] = useState<Pandals | null>(null)
-	const [isBottomSheetVisible, setIsBottomSheetVisible] = useState(false)
 	const [sortBy, setSortBy] = useState<SortOption>('name')
 	const [showSortModal, setShowSortModal] = useState(false)
 	const [loading, setLoading] = useState(false)
-	const pandalDetailsRef = useRef<PandalDetailsRef>(null)
 	const searchInputRef = useRef<TextInput>(null)
 
 	const pandals = usePandalStore((state) => state.pandals)
 	const error = usePandalStore((state) => state.error)
 	const loadPandals = usePandalStore((state) => state.loadPandals)
+	const setSelectedPandal = usePandalStore((state) => state.setSelectedPandal)
 	const favorites = useFavoritesStore((state) => state.favorites)
 	const visited = useVisitedStore((state) => state.visited)
 	const supabase = useSupabaseStore((state) => state.supabase)
@@ -102,19 +98,15 @@ export default function AllPandalsScreen() {
 		}
 	}, [filteredPandals, sortBy])
 
-	const handlePandalPress = useCallback((pandal: Pandals) => {
-		setSelectedPandal(pandal)
-		setIsBottomSheetVisible(true)
-	}, [])
-
-	const handleBottomSheetClose = useCallback(() => {
-		setIsBottomSheetVisible(false)
-		setSelectedPandal(null)
-	}, [])
-
-	const handlePandalNavigate = useCallback((newPandal: Pandals) => {
-		setSelectedPandal(newPandal)
-	}, [])
+	const handlePandalPress = useCallback(
+		(pandal: Pandals) => {
+			// Set the selected pandal in the global store
+			setSelectedPandal(pandal)
+			// Navigate to the Maps tab
+			router.push('/')
+		},
+		[setSelectedPandal]
+	)
 
 	const handleRefresh = useCallback(async () => {
 		setLoading(true)
@@ -342,16 +334,6 @@ export default function AllPandalsScreen() {
 						</TouchableOpacity>
 					</View>
 				</View>
-			)}
-			{selectedPandal && (
-				<PandalDetails
-					allPandals={pandals}
-					isVisible={isBottomSheetVisible}
-					onClose={handleBottomSheetClose}
-					onPandalNavigate={handlePandalNavigate}
-					pandal={selectedPandal}
-					ref={pandalDetailsRef}
-				/>
 			)}
 			<Modal
 				animationType="fade"
