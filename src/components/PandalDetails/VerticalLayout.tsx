@@ -1,6 +1,18 @@
+import {
+	Accuracy,
+	getCurrentPositionAsync,
+	requestForegroundPermissionsAsync
+} from 'expo-location'
 import { Link } from 'expo-router'
-import { memo, useMemo } from 'react'
-import { Text, View } from 'react-native'
+import { memo, useMemo, useState } from 'react'
+import {
+	Alert,
+	Linking,
+	Platform,
+	Text,
+	TouchableOpacity,
+	View
+} from 'react-native'
 import { useSupabaseStore } from '@/hooks/useSupabaseContext'
 import { useFavoritesStore } from '@/stores/favoritesStore'
 import { useVisitedStore } from '@/stores/visitedStore'
@@ -43,7 +55,6 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 			theme = '',
 			artistname = '',
 			clubsocialmedialinks = [],
-			address = '',
 			rating = 0,
 			images = []
 		} = pandal
@@ -67,6 +78,8 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 
 		const supabase = useSupabaseStore((state) => state.supabase)
 
+		const [isLoadingDirections, setIsLoadingDirections] = useState(false)
+
 		const isFavorited = favorites.has(pandalId)
 		const isFavoriteLoading = favoritesLoading.has(pandalId)
 		const isFavoriteDebouncing = favoritesDebouncing.has(pandalId)
@@ -89,6 +102,79 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 				return
 			}
 			toggleVisited(pandalId, userId, supabase)
+		}
+
+		const goToMaps = async () => {
+			setIsLoadingDirections(true)
+			try {
+				const { status } = await requestForegroundPermissionsAsync()
+
+				if (status !== 'granted') {
+					Alert.alert(
+						'Permission Denied',
+						'Location permission is required to show directions.',
+						[{ text: 'OK' }]
+					)
+					return
+				}
+
+				const location = await getCurrentPositionAsync({
+					accuracy: Accuracy.Balanced,
+					timeInterval: 5000,
+					distanceInterval: 0
+				})
+
+				const { latitude: currentLat, longitude: currentLng } = location.coords
+
+				const pandalLat = pandal.latitude
+				const pandalLng = pandal.longitude
+
+				if (!(pandalLat && pandalLng)) {
+					Alert.alert('Location Error', 'Pandal location is not available.', [
+						{ text: 'OK' }
+					])
+					return
+				}
+
+				const googleMapsAppUrl = Platform.select({
+					ios: `comgooglemaps://?saddr=${currentLat},${currentLng}&daddr=${pandalLat},${pandalLng}&directionsmode=driving`,
+					android: `google.navigation:q=${pandalLat},${pandalLng}&mode=d`
+				})
+
+				if (googleMapsAppUrl) {
+					const canOpenGoogleMaps = await Linking.canOpenURL(googleMapsAppUrl)
+					if (canOpenGoogleMaps) {
+						await Linking.openURL(googleMapsAppUrl)
+						return
+					}
+				} else if (Platform.OS === 'ios') {
+					const appleMapsUrl = `maps://app?saddr=${currentLat},${currentLng}&daddr=${pandalLat},${pandalLng}&dirflg=d`
+					const canOpenAppleMaps = await Linking.canOpenURL(appleMapsUrl)
+					if (canOpenAppleMaps) {
+						await Linking.openURL(appleMapsUrl)
+						return
+					}
+				}
+
+				const googleMapsWebUrl = `https://www.google.com/maps/dir/?api=1&origin=${currentLat},${currentLng}&destination=${pandalLat},${pandalLng}&travelmode=driving`
+
+				const canOpenGoogleWeb = await Linking.canOpenURL(googleMapsWebUrl)
+				if (canOpenGoogleWeb) {
+					await Linking.openURL(googleMapsWebUrl)
+				} else {
+					Alert.alert('Error', 'Unable to open maps application.', [
+						{ text: 'OK' }
+					])
+				}
+			} catch {
+				Alert.alert(
+					'Error',
+					'Failed to get your location or open maps. Please try again.',
+					[{ text: 'OK' }]
+				)
+			} finally {
+				setIsLoadingDirections(false)
+			}
 		}
 
 		return (
@@ -199,14 +285,6 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 								</Text>
 							</View>
 						)}
-						{address && (
-							<View className="mb-2 flex flex-row items-start">
-								<Text className="mr-1 font-bold text-[13px]">Address:</Text>
-								<Text className="mt-[1.8px] flex-1 text-[11.5px]">
-									{address}
-								</Text>
-							</View>
-						)}
 						{clubsocialmedialinks && clubsocialmedialinks.length > 0 && (
 							<View className="mb-1 flex flex-row">
 								<Text className="mr-1 font-bold text-[13px]">Socials:</Text>
@@ -244,6 +322,36 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 								starSize={30}
 								userId={userId}
 							/>
+						</View>
+						<View className="mt-3 mb-1">
+							<TouchableOpacity
+								activeOpacity={0.8}
+								disabled={isLoadingDirections}
+								onPress={goToMaps}
+								style={{
+									backgroundColor: isLoadingDirections ? '#666666' : '#000000',
+									paddingVertical: 10,
+									borderRadius: 50,
+									elevation: 8,
+									alignItems: 'center',
+									justifyContent: 'center',
+									flexDirection: 'row',
+									opacity: isLoadingDirections ? 0.7 : 1
+								}}
+							>
+								<Text
+									style={{
+										color: 'white',
+										fontWeight: '600',
+										fontSize: 16,
+										letterSpacing: 0.5
+									}}
+								>
+									{isLoadingDirections
+										? 'Getting Location...'
+										: 'Get Directions'}
+								</Text>
+							</TouchableOpacity>
 						</View>
 					</View>
 					<NearestPandals

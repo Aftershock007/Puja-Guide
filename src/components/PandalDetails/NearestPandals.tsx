@@ -145,7 +145,7 @@ const NearestPandals = memo<NearestPandalsProps>(
 						</View>
 					)}
 				</View>
-				<View style={{ height: 210 }}>
+				<View style={{ height: 180 }}>
 					<ScrollView
 						nestedScrollEnabled={true}
 						showsVerticalScrollIndicator={false}
