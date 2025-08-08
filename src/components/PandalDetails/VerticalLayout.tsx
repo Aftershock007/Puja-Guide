@@ -5,14 +5,7 @@ import {
 } from 'expo-location'
 import { Link } from 'expo-router'
 import { memo, useMemo, useState } from 'react'
-import {
-	Alert,
-	Linking,
-	Platform,
-	Text,
-	TouchableOpacity,
-	View
-} from 'react-native'
+import { Alert, Linking, Text, TouchableOpacity, View } from 'react-native'
 import { useSupabaseStore } from '@/hooks/useSupabaseContext'
 import { useFavoritesStore } from '@/stores/favoritesStore'
 import { useVisitedStore } from '@/stores/visitedStore'
