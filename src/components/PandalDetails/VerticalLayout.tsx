@@ -61,7 +61,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 
 		const displayImages = useMemo(() => {
 			const safeImages = images || []
-			return safeImages.length > 3 ? safeImages.slice(0, 3) : safeImages
+			return safeImages.length > 2 ? safeImages.slice(0, 2) : safeImages
 		}, [images])
 
 		const favorites = useFavoritesStore((state) => state.favorites)
