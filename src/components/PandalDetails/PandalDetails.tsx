@@ -119,6 +119,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 					currentSnapIndex >= 1 && !forceHorizontalLayout
 
 				if (index < 1) {
+					resetUI()
 					onClose()
 					return
 				}
@@ -157,6 +158,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 			},
 			[
 				onClose,
+				resetUI,
 				fadeAnim,
 				isLayoutTransitioning,
 				forceHorizontalLayout,
@@ -168,9 +170,9 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 
 		useEffect(() => {
 			if (isVisible) {
+				resetUI()
 				InteractionManager.runAfterInteractions(() => {
 					bottomSheetRef.current?.expand()
-					resetUI()
 					fadeAnim.setValue(1)
 				})
 			} else {
