@@ -80,7 +80,7 @@ export default function StarRatingPicker({
 				/>
 
 				{isSubmitting && (
-					<ActivityIndicator className="ml-4" color="#FFD700" size="small" />
+					<ActivityIndicator className="ml-3" color="#FFD700" size="small" />
 				)}
 			</View>
 

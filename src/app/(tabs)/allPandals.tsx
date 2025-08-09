@@ -334,7 +334,7 @@ export default function AllPandalsScreen() {
 					paddingBottom: insets.bottom
 				}}
 			>
-				<ActivityIndicator color="#000" size="large" />
+				<ActivityIndicator color="#000" size="small" />
 				<Text className="mt-4 font-medium text-black text-lg">
 					Loading pandals...
 				</Text>
@@ -370,7 +370,7 @@ export default function AllPandalsScreen() {
 
 	return (
 		<View
-			className="flex-1 bg-gray-50"
+			className="flex-1 bg-white"
 			style={{
 				paddingTop: insets.top,
 				paddingBottom: insets.bottom
@@ -389,7 +389,7 @@ export default function AllPandalsScreen() {
 					)}
 				</View>
 			</View>
-			<View className="bg-white px-4 py-4">
+			<View className="bg-white px-4 py-1">
 				<View className="relative mb-4">
 					<View className="flex-row items-center rounded-lg bg-gray-100 px-3 py-2">
 						<Ionicons color="#6B7280" name="search" size={20} />
@@ -422,7 +422,10 @@ export default function AllPandalsScreen() {
 						className="ml-2 max-w-[60%] flex-row items-center rounded-lg bg-gray-100 px-2.5 py-1.5"
 						onPress={() => setShowSortModal(true)}
 					>
-						<Text className="mr-1 flex-shrink text-[12px] text-gray-700" numberOfLines={1}>
+						<Text
+							className="mr-1 flex-shrink text-[12px] text-gray-700"
+							numberOfLines={1}
+						>
 							{getCurrentSortLabel()}
 						</Text>
 						<Ionicons color="#6B7280" name="chevron-down" size={14} />
@@ -430,12 +433,16 @@ export default function AllPandalsScreen() {
 				</View>
 			</View>
 			<FlatList
+				alwaysBounceVertical={true}
+				bounces={true}
 				contentContainerStyle={{
 					flexGrow: 1,
 					paddingTop: 10,
 					paddingBottom: 43
 				}}
 				data={sortedPandals}
+				directionalLockEnabled={true}
+				horizontal={false}
 				initialNumToRender={15}
 				keyboardShouldPersistTaps="handled"
 				keyExtractor={keyExtractor}
@@ -451,6 +458,8 @@ export default function AllPandalsScreen() {
 				}
 				removeClippedSubviews={true}
 				renderItem={renderPandalCard}
+				scrollEnabled={true}
+				showsHorizontalScrollIndicator={false}
 				showsVerticalScrollIndicator={false}
 				updateCellsBatchingPeriod={50}
 				windowSize={21}
@@ -493,7 +502,7 @@ export default function AllPandalsScreen() {
 						<View className="pb-6">
 							{SORT_OPTIONS.map((option) => (
 								<TouchableOpacity
-									className="flex-row items-center justify-between px-4 py-4"
+									className="flex-row items-center justify-between p-4"
 									key={option.value}
 									onPress={() => handleSortSelect(option.value)}
 								>

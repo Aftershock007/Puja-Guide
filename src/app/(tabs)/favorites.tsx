@@ -108,7 +108,7 @@ export default function FavoritesScreen() {
 					paddingBottom: insets.bottom
 				}}
 			>
-				<ActivityIndicator color="#000" size="large" />
+				<ActivityIndicator color="#000" size="small" />
 				<Text className="mt-4 font-medium text-gray-800 text-lg">
 					Loading your favorites...
 				</Text>

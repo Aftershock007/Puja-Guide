@@ -102,7 +102,7 @@ export default function HomeScreen() {
 	if (loading && pandals.length === 0) {
 		return (
 			<View className="flex-1 items-center justify-center">
-				<ActivityIndicator color="black" size="large" />
+				<ActivityIndicator color="black" size="small" />
 				<Text className="mt-2.5">Loading pandals...</Text>
 			</View>
 		)
