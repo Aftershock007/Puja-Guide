@@ -27,14 +27,16 @@ type SortOption = 'name' | 'rating' | 'popularity' | 'distance'
 
 interface SortConfig {
 	label: string
-	value: SortOption
+	value: SortOption | 'remove-visited'
+	isFilter?: boolean
 }
 
 const SORT_OPTIONS: SortConfig[] = [
 	{ label: 'Sort by Name (A-Z)', value: 'name' },
 	{ label: 'Sort by Rating', value: 'rating' },
 	{ label: 'Most Popular', value: 'popularity' },
-	{ label: 'Sort by Distance', value: 'distance' }
+	{ label: 'Sort by Distance', value: 'distance' },
+	{ label: 'Remove Visited Pandals', value: 'remove-visited', isFilter: true }
 ]
 
 export default function AllPandalsScreen() {
@@ -43,6 +45,7 @@ export default function AllPandalsScreen() {
 	const [sortBy, setSortBy] = useState<SortOption>('name')
 	const [showSortModal, setShowSortModal] = useState(false)
 	const [loading, setLoading] = useState(false)
+	const [hideVisited, setHideVisited] = useState(false)
 	const searchInputRef = useRef<TextInput>(null)
 
 	const pandals = usePandalStore((state) => state.pandals)
@@ -63,19 +66,27 @@ export default function AllPandalsScreen() {
 	} = useLocationDistanceTracker(pandals, 120_000) // Update every 2 minutes
 
 	const filteredPandals = useMemo(() => {
-		if (!searchQuery.trim()) {
-			return pandalsWithDistance
+		let filtered = pandalsWithDistance
+
+		// Apply visited filter first
+		if (hideVisited) {
+			filtered = filtered.filter((pandal) => !visited.has(pandal.id))
 		}
 
-		const query = searchQuery.toLowerCase().trim()
-		return pandalsWithDistance.filter(
-			(pandal) =>
-				pandal.clubname?.toLowerCase().includes(query) ||
-				pandal.address?.toLowerCase().includes(query) ||
-				pandal.theme?.toLowerCase().includes(query) ||
-				pandal.artistname?.toLowerCase().includes(query)
-		)
-	}, [pandalsWithDistance, searchQuery])
+		// Apply search filter
+		if (searchQuery.trim()) {
+			const query = searchQuery.toLowerCase().trim()
+			filtered = filtered.filter(
+				(pandal) =>
+					pandal.clubname?.toLowerCase().includes(query) ||
+					pandal.address?.toLowerCase().includes(query) ||
+					pandal.theme?.toLowerCase().includes(query) ||
+					pandal.artistname?.toLowerCase().includes(query)
+			)
+		}
+
+		return filtered
+	}, [pandalsWithDistance, searchQuery, hideVisited, visited])
 
 	const sortedPandals = useMemo(() => {
 		const sorted = [...filteredPandals]
@@ -120,10 +131,17 @@ export default function AllPandalsScreen() {
 		}
 	}, [loadPandals, supabase, refreshLocation])
 
-	const handleSortSelect = useCallback((option: SortOption) => {
-		setSortBy(option)
-		setShowSortModal(false)
-	}, [])
+	const handleSortSelect = useCallback(
+		(option: SortOption | 'remove-visited') => {
+			if (option === 'remove-visited') {
+				setHideVisited(!hideVisited)
+			} else {
+				setSortBy(option)
+			}
+			setShowSortModal(false)
+		},
+		[hideVisited]
+	)
 
 	const clearSearch = useCallback(() => {
 		setSearchQuery('')
@@ -131,10 +149,11 @@ export default function AllPandalsScreen() {
 	}, [])
 
 	const getCurrentSortLabel = useCallback(() => {
-		return (
+		const sortLabel =
 			SORT_OPTIONS.find((option) => option.value === sortBy)?.label || 'Sort'
-		)
-	}, [sortBy])
+		const filterLabel = hideVisited ? ' (Visited Hidden)' : ''
+		return sortLabel + filterLabel
+	}, [sortBy, hideVisited])
 
 	const renderPandalCard = useCallback(
 		({ item: pandal }: { item: PandalWithDistance }) => {
@@ -362,7 +381,8 @@ export default function AllPandalsScreen() {
 									<View className="flex-row items-center">
 										<Text
 											className={`text-base ${
-												sortBy === option.value
+												(option.isFilter && hideVisited) ||
+												(!option.isFilter && sortBy === option.value)
 													? 'font-semibold text-black'
 													: 'text-gray-700'
 											}`}
@@ -375,7 +395,9 @@ export default function AllPandalsScreen() {
 											</Text>
 										)}
 									</View>
-									{sortBy === option.value && (
+									{(option.isFilter
+										? hideVisited
+										: sortBy === option.value) && (
 										<Ionicons color="#000" name="checkmark" size={20} />
 									)}
 								</TouchableOpacity>
