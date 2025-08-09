@@ -30,8 +30,8 @@ const VisitedButton = memo<VisitedButtonProps>(
 
 		const isDisabled = isLoading || isDebouncing || !!error
 
-		const buttonClasses = `min-w-[100px] flex-row items-center justify-center rounded-lg px-4 py-2 ${
-			isVisited ? 'bg-gray-400' : 'bg-black'
+		const buttonClasses = `min-w-[100px] flex-row items-center justify-center rounded-xl px-2.5 py-1.5 ${
+			isVisited ? 'bg-gray-500' : 'bg-black'
 		} ${isDisabled ? 'opacity-60' : 'opacity-100'} ${className}`
 
 		const buttonText = isVisited ? 'NOT VISITED YET' : ' MARK AS VISITED'
@@ -42,7 +42,7 @@ const VisitedButton = memo<VisitedButtonProps>(
 				disabled={isDisabled}
 				onPress={handlePress}
 			>
-				<Text className="text-white text-xs font-bold text-center">
+				<Text className="text-center font-bold text-white text-xs">
 					{buttonText}
 				</Text>
 			</TouchableOpacity>
