@@ -196,12 +196,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 						onFavoriteChange={handleFavoriteChange}
 						size={40}
 					/>
-					<View
-						className="absolute top-2.5 right-2.5 z-20"
-						style={{
-							alignItems: 'center'
-						}}
-					>
+					<View className="absolute top-2.5 right-2.5 z-20 items-center">
 						<VisitedButton
 							error={visitedError}
 							isDebouncing={isVisitedDebouncing}
@@ -210,33 +205,8 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 							onVisitedChange={handleVisitedChange}
 						/>
 					</View>
-					<View
-						className="m-3 mt-[-30px] rounded-xl bg-gray-100 px-3.5 pt-2 pb-2"
-						style={{
-							shadowColor: '#000',
-							shadowOffset: { width: -6, height: -6 },
-							shadowOpacity: 0.15,
-							shadowRadius: 10,
-							elevation: 8,
-							borderWidth: 1,
-							borderColor: 'rgba(255, 255, 255, 0.8)'
-						}}
-					>
-						<View
-							style={{
-								position: 'absolute',
-								top: 0,
-								left: 0,
-								right: 0,
-								bottom: 0,
-								borderRadius: 12,
-								shadowColor: '#000',
-								shadowOffset: { width: 6, height: 6 },
-								shadowOpacity: 0.1,
-								shadowRadius: 8,
-								backgroundColor: 'transparent'
-							}}
-						/>
+					<View className="android:elevation-8 m-3 mt-[-30px] rounded-xl border border-white/80 bg-gray-100 px-3.5 pt-2 pb-2 shadow-xl">
+						<View className="absolute inset-0 rounded-xl bg-transparent shadow-lg" />
 						<View className="mb-2 flex flex-col items-start">
 							<Text className="mb-[1.2px] font-bold text-2xl" numberOfLines={1}>
 								{clubname}
@@ -295,18 +265,7 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 								</View>
 							</View>
 						)}
-						<View
-							className="my-1.5 h-[1.5px]"
-							style={{
-								backgroundColor: '#e5e7eb',
-								shadowColor: '#000',
-								shadowOffset: { width: 0, height: 1 },
-								shadowOpacity: 0.1,
-								shadowRadius: 2,
-								borderTopWidth: 1,
-								borderTopColor: 'rgba(255, 255, 255, 0.8)'
-							}}
-						/>
+						<View className="my-1.5 h-[1.5px] border-t border-t-white/80 bg-gray-200 shadow-sm" />
 						<View className="flex flex-row items-center">
 							<Text className="mt-[2px] mr-1 font-bold text-[13px]">
 								Rate this pandal:

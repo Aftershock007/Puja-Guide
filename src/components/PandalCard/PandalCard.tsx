@@ -32,18 +32,7 @@ const PandalCard = memo<PandalCardProps>(
 				className={className}
 				onPress={() => onPress(pandal)}
 			>
-				<View
-					className="rounded-lg bg-white px-3 py-2"
-					style={{
-						shadowColor: '#000',
-						shadowOffset: { width: 0, height: 1 },
-						shadowOpacity: 0.05,
-						shadowRadius: 3,
-						elevation: 2,
-						borderWidth: 0.5,
-						borderColor: '#E5E7EB'
-					}}
-				>
+				<View className="android:elevation-2 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
 					<View className="mb-1 flex-row items-center">
 						{pandal.clubname && (
 							<Text
@@ -70,7 +59,7 @@ const PandalCard = memo<PandalCardProps>(
 									</View>
 								)}
 							</View>
-							<View style={{ width: 16 }} />
+							<View className="w-4" />
 						</View>
 					</View>
 					<View className="mb-1 flex-row items-center">

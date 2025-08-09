@@ -46,7 +46,7 @@ const CustomMarker = memo<CustomMarkerProps>(({ onPress, ...pandal }) => {
 			key={pandal.id}
 			onPress={handlePress}
 		>
-			<TouchableOpacity activeOpacity={0.8} style={{ zIndex: 1000 }}>
+			<TouchableOpacity activeOpacity={0.8} className="z-50">
 				<View className="items-center">
 					<View
 						className={`min-h-[36px] max-w-[150px] gap-0.5 rounded-xl px-3 py-2 ${markerBgClass}`}

@@ -30,28 +30,19 @@ const VisitedButton = memo<VisitedButtonProps>(
 
 		const isDisabled = isLoading || isDebouncing || !!error
 
-		const buttonStyle = {
-			backgroundColor: isVisited ? '#BEBEBE' : '#000',
-			opacity: isDisabled ? 0.6 : 1
-		}
+		const buttonClasses = `min-w-[100px] flex-row items-center justify-center rounded-lg px-4 py-2 ${
+			isVisited ? 'bg-gray-400' : 'bg-black'
+		} ${isDisabled ? 'opacity-60' : 'opacity-100'} ${className}`
 
 		const buttonText = isVisited ? 'NOT VISITED YET' : ' MARK AS VISITED'
 
 		return (
 			<TouchableOpacity
-				className={`min-w-[100px] flex-row items-center justify-center rounded-lg px-4 py-2 ${className}`}
+				className={buttonClasses}
 				disabled={isDisabled}
 				onPress={handlePress}
-				style={buttonStyle}
 			>
-				<Text
-					style={{
-						color: '#FFFFFF',
-						fontSize: 12,
-						fontWeight: 'bold',
-						textAlign: 'center'
-					}}
-				>
+				<Text className="text-white text-xs font-bold text-center">
 					{buttonText}
 				</Text>
 			</TouchableOpacity>

@@ -34,17 +34,12 @@ const FavoriteButton = memo<FavoriteButtonProps>(
 
 		return (
 			<TouchableOpacity
-				className={`items-center justify-center rounded-full ${className}`}
+				className={`items-center justify-center rounded-full border border-white/30 bg-white/25 ${isDisabled ? 'opacity-70' : 'opacity-100'} android:elevation-[5] ${className}`}
 				disabled={isDisabled}
 				onPress={handlePress}
 				style={{
 					width: size,
-					height: size,
-					backgroundColor: 'rgba(255, 255, 255, 0.25)',
-					borderWidth: 1,
-					borderColor: 'rgba(255, 255, 255, 0.3)',
-					elevation: 5,
-					opacity: isDisabled ? 0.7 : 1
+					height: size
 				}}
 			>
 				<View>

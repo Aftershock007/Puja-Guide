@@ -76,34 +76,12 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 					size={40}
 				/>
 				<View
-					className="absolute top-2 right-2 bottom-2 rounded-xl bg-gray-100 px-3.5 py-1.5"
+					className="android:elevation-8 absolute top-2 right-2 bottom-2 z-10 rounded-xl border border-white/80 bg-gray-100 px-3.5 py-1.5 shadow-lg"
 					style={{
-						left: '42%',
-						shadowColor: '#000',
-						shadowOffset: { width: -4, height: -4 },
-						shadowOpacity: 0.15,
-						shadowRadius: 8,
-						elevation: 8,
-						borderWidth: 1,
-						borderColor: 'rgba(255, 255, 255, 0.8)',
-						zIndex: 10
+						left: '42%'
 					}}
 				>
-					<View
-						style={{
-							position: 'absolute',
-							top: 0,
-							left: 0,
-							right: 0,
-							bottom: 0,
-							borderRadius: 12,
-							shadowColor: '#000',
-							shadowOffset: { width: 4, height: 4 },
-							shadowOpacity: 0.1,
-							shadowRadius: 6,
-							backgroundColor: 'transparent'
-						}}
-					/>
+					<View className="absolute inset-0 rounded-xl bg-transparent shadow-md" />
 					<View className="flex-1 justify-center">
 						{clubname && (
 							<Text className="mb-2 font-bold text-xl" numberOfLines={1}>
@@ -141,18 +119,7 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 								</Text>
 							</View>
 						)}
-						<View
-							className="mx-0.5 my-1 h-[1.5px]"
-							style={{
-								backgroundColor: '#e5e7eb',
-								shadowColor: '#000',
-								shadowOffset: { width: 0, height: 1 },
-								shadowOpacity: 0.1,
-								shadowRadius: 1,
-								borderTopWidth: 0.5,
-								borderTopColor: 'rgba(255, 255, 255, 0.8)'
-							}}
-						/>
+						<View className="mx-0.5 my-1 h-[1.5px] border-t border-t-white/80 bg-gray-200 shadow-sm" />
 						<View className="mt-1 items-center">
 							<Text className="mb-1 font-bold text-[12px]">
 								Rate this pandal:

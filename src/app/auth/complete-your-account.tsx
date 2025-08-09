@@ -128,7 +128,10 @@ export default function CompleteYourAccountScreen() {
 	return (
 		<View
 			className="flex-1 gap-5 bg-white p-5"
-			style={{ paddingTop: insets.top + 20, paddingBottom: insets.bottom }}
+			style={{
+				paddingTop: insets.top + 20,
+				paddingBottom: insets.bottom
+			}}
 		>
 			<Header
 				heading={completeDetailsPageHeader.heading}

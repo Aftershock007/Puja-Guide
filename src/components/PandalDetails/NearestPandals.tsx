@@ -42,18 +42,7 @@ const NearestPandals = memo<NearestPandalsProps>(
 
 		if (isLoadingLocation && !userLocation) {
 			return (
-				<View
-					className="mx-3 mb-3 rounded-xl bg-gray-100 p-4"
-					style={{
-						shadowColor: '#000',
-						shadowOffset: { width: -4, height: -4 },
-						shadowOpacity: 0.12,
-						shadowRadius: 8,
-						elevation: 6,
-						borderWidth: 1,
-						borderColor: 'rgba(255, 255, 255, 0.8)'
-					}}
-				>
+				<View className="mx-3 mb-3 rounded-xl border border-white/80 bg-gray-100 p-4 shadow-lg android:elevation-6">
 					<Text className="mb-2 font-bold text-[13.5px] text-black">
 						Nearest Pandals:
 					</Text>
@@ -66,18 +55,7 @@ const NearestPandals = memo<NearestPandalsProps>(
 
 		if (!(locationPermission || isLoadingLocation)) {
 			return (
-				<View
-					className="mx-3 mb-3 rounded-xl bg-gray-100 p-4"
-					style={{
-						shadowColor: '#000',
-						shadowOffset: { width: -4, height: -4 },
-						shadowOpacity: 0.12,
-						shadowRadius: 8,
-						elevation: 6,
-						borderWidth: 1,
-						borderColor: 'rgba(255, 255, 255, 0.8)'
-					}}
-				>
+				<View className="mx-3 mb-3 rounded-xl border border-white/80 bg-gray-100 p-4 shadow-lg android:elevation-6">
 					<Text className="mb-2 font-bold text-[13.5px] text-black">
 						Nearest Pandals:
 					</Text>
@@ -90,18 +68,7 @@ const NearestPandals = memo<NearestPandalsProps>(
 
 		if (locationError) {
 			return (
-				<View
-					className="mx-3 mb-3 rounded-xl bg-gray-100 p-4"
-					style={{
-						shadowColor: '#000',
-						shadowOffset: { width: -4, height: -4 },
-						shadowOpacity: 0.12,
-						shadowRadius: 8,
-						elevation: 6,
-						borderWidth: 1,
-						borderColor: 'rgba(255, 255, 255, 0.8)'
-					}}
-				>
+				<View className="mx-3 mb-3 rounded-xl border border-white/80 bg-gray-100 p-4 shadow-lg android:elevation-6">
 					<Text className="mb-2 font-bold text-[13.5px] text-black">
 						Nearest Pandals:
 					</Text>
@@ -114,18 +81,7 @@ const NearestPandals = memo<NearestPandalsProps>(
 
 		if (nearestPandals.length === 0) {
 			return (
-				<View
-					className="mx-3 mb-3 rounded-xl bg-gray-100 p-4"
-					style={{
-						shadowColor: '#000',
-						shadowOffset: { width: -4, height: -4 },
-						shadowOpacity: 0.12,
-						shadowRadius: 8,
-						elevation: 6,
-						borderWidth: 1,
-						borderColor: 'rgba(255, 255, 255, 0.8)'
-					}}
-				>
+				<View className="mx-3 mb-3 rounded-xl border border-white/80 bg-gray-100 p-4 shadow-lg android:elevation-6">
 					<Text className="mb-2 font-bold text-[13.5px]">Nearest Pandals:</Text>
 					<Text className="text-[12px] italic">No nearby pandals found</Text>
 				</View>
@@ -145,11 +101,11 @@ const NearestPandals = memo<NearestPandalsProps>(
 						</View>
 					)}
 				</View>
-				<View style={{ height: 180 }}>
+				<View className="h-[180px]">
 					<ScrollView
 						nestedScrollEnabled={true}
 						showsVerticalScrollIndicator={false}
-						style={{ flex: 1 }}
+						className="flex-1"
 					>
 						{nearestPandals.map((pandal) => {
 							const isFavorited = favorites.has(pandal.id)

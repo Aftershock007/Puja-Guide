@@ -61,8 +61,8 @@ export default function StarRatingPicker({
 	}
 
 	return (
-		<View style={{ alignItems: 'center' }}>
-			<View style={{ flexDirection: 'row', alignItems: 'center' }}>
+		<View className="items-center">
+			<View className="flex-row items-center">
 				<StarRating
 					animationConfig={{
 						scale: 1.2,
@@ -80,23 +80,12 @@ export default function StarRatingPicker({
 				/>
 
 				{isSubmitting && (
-					<ActivityIndicator
-						color="#FFD700"
-						size="small"
-						style={{ marginLeft: 8 }}
-					/>
+					<ActivityIndicator className="ml-2" color="#FFD700" size="small" />
 				)}
 			</View>
 
 			{error && (
-				<Text
-					style={{
-						color: 'red',
-						fontSize: 10,
-						marginTop: 4,
-						textAlign: 'center'
-					}}
-				>
+				<Text className="mt-1 text-center text-[10px] text-red-600">
 					{error}
 				</Text>
 			)}
