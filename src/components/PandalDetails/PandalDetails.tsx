@@ -25,7 +25,7 @@ import HorizontalLayout from './HorizontalLayout'
 import VerticalLayout from './VerticalLayout'
 
 const SCREEN_WIDTH = Dimensions.get('window').width
-const PADDING_HORIZONTAL = 35
+const PADDING_HORIZONTAL = 20
 const AVAILABLE_WIDTH = SCREEN_WIDTH - PADDING_HORIZONTAL
 
 interface PandalDetailsProps {
@@ -216,7 +216,7 @@ const PandalDetails = forwardRef<PandalDetailsRef, PandalDetailsProps>(
 					ref={bottomSheetRef}
 					snapPoints={snapPoints}
 				>
-					<BottomSheetView className="flex-1 px-5">
+					<BottomSheetView className="flex-1 px-2">
 						{showMainContent ? (
 							<Animated.View className="flex-1" style={{ opacity: fadeAnim }}>
 								{computedValues.isVerticalLayout ? (

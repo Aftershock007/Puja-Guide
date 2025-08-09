@@ -5,7 +5,14 @@ import {
 } from 'expo-location'
 import { Link } from 'expo-router'
 import { memo, useMemo, useState } from 'react'
-import { Alert, Linking, Text, TouchableOpacity, View } from 'react-native'
+import {
+	ActivityIndicator,
+	Alert,
+	Linking,
+	Text,
+	TouchableOpacity,
+	View
+} from 'react-native'
 import { useSupabaseStore } from '@/hooks/useSupabaseContext'
 import { useFavoritesStore } from '@/stores/favoritesStore'
 import { useVisitedStore } from '@/stores/visitedStore'
@@ -205,8 +212,8 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 							onVisitedChange={handleVisitedChange}
 						/>
 					</View>
-					<View className="android:elevation-8 m-3 mt-[-30px] rounded-xl border border-white/80 bg-gray-100 px-3.5 pt-2 pb-2 shadow-xl">
-						<View className="absolute inset-0 rounded-xl bg-transparent shadow-lg" />
+					<View className="android:elevation-8 m-2 mt-[-30px] rounded-xl border border-white/80 bg-gray-100 px-3.5 pt-2 pb-2 shadow-md">
+						<View className="absolute inset-0 rounded-xl bg-transparent" />
 						<View className="mb-2 flex flex-col items-start">
 							<Text className="mb-[1.2px] font-bold text-2xl" numberOfLines={1}>
 								{clubname}
@@ -278,16 +285,18 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 						</View>
 						<View className="mt-3 mb-1">
 							<TouchableOpacity
-								className={`flex-row items-center justify-center rounded-full bg-black py-2.5 ${
-									isLoadingDirections ? 'opacity-75' : 'opacity-100'
+								className={`flex-row items-center justify-center rounded-xl bg-black py-2.5 ${
+									isLoadingDirections ? 'opacity-85' : 'opacity-100'
 								}`}
 								disabled={isLoadingDirections}
 								onPress={goToMaps}
 							>
 								<Text className="font-semibold text-base text-white tracking-wide">
-									{isLoadingDirections
-										? 'Getting Location...'
-										: 'Get Directions'}
+									{isLoadingDirections ? (
+										<ActivityIndicator color="white" size="small" />
+									) : (
+										'Get Directions'
+									)}
 								</Text>
 							</TouchableOpacity>
 						</View>

@@ -32,7 +32,7 @@ const PandalCard = memo<PandalCardProps>(
 				className={className}
 				onPress={() => onPress(pandal)}
 			>
-				<View className="android:elevation-2 rounded-lg border border-gray-200 bg-white px-3 py-2 shadow-sm">
+				<View className="android:elevation-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
 					<View className="mb-1 flex-row items-center">
 						{pandal.clubname && (
 							<Text

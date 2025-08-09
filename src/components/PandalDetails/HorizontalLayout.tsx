@@ -55,7 +55,7 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 		return (
 			<View className="relative h-[190px] overflow-hidden rounded-2xl bg-gray-100">
 				<View
-					className="relative w-[47%]"
+					className="relative w-[50%]"
 					onLayout={(e) => onImageContainerLayout(e.nativeEvent.layout.width)}
 				>
 					<ImageCarousel
@@ -78,7 +78,7 @@ const HorizontalLayout = memo<HorizontalLayoutProps>(
 				<View
 					className="android:elevation-8 absolute top-2 right-2 bottom-2 z-10 rounded-xl border border-white/80 bg-gray-100 px-3.5 py-1.5 shadow-lg"
 					style={{
-						left: '42%'
+						left: '45%'
 					}}
 				>
 					<View className="absolute inset-0 rounded-xl bg-transparent shadow-md" />
