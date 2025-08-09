@@ -27,7 +27,12 @@ type SortOption = 'name' | 'rating' | 'popularity' | 'distance'
 
 interface SortConfig {
 	label: string
-	value: SortOption | 'remove-visited'
+	value:
+		| SortOption
+		| 'remove-visited'
+		| 'show-visited-only'
+		| 'show-favorites-only'
+		| 'remove-favorites'
 	isFilter?: boolean
 }
 
@@ -36,7 +41,22 @@ const SORT_OPTIONS: SortConfig[] = [
 	{ label: 'Sort by Rating', value: 'rating' },
 	{ label: 'Most Popular', value: 'popularity' },
 	{ label: 'Sort by Distance', value: 'distance' },
-	{ label: 'Remove Visited Pandals', value: 'remove-visited', isFilter: true }
+	{
+		label: 'Show Only Visited Pandals',
+		value: 'show-visited-only',
+		isFilter: true
+	},
+	{ label: 'Remove Visited Pandals', value: 'remove-visited', isFilter: true },
+	{
+		label: 'Show Favourite Pandals Only',
+		value: 'show-favorites-only',
+		isFilter: true
+	},
+	{
+		label: 'Remove Favourite Pandals',
+		value: 'remove-favorites',
+		isFilter: true
+	}
 ]
 
 export default function AllPandalsScreen() {
@@ -46,6 +66,9 @@ export default function AllPandalsScreen() {
 	const [showSortModal, setShowSortModal] = useState(false)
 	const [loading, setLoading] = useState(false)
 	const [hideVisited, setHideVisited] = useState(false)
+	const [showVisitedOnly, setShowVisitedOnly] = useState(false)
+	const [showFavoritesOnly, setShowFavoritesOnly] = useState(false)
+	const [hideFavorites, setHideFavorites] = useState(false)
 	const searchInputRef = useRef<TextInput>(null)
 
 	const pandals = usePandalStore((state) => state.pandals)
@@ -68,9 +91,20 @@ export default function AllPandalsScreen() {
 	const filteredPandals = useMemo(() => {
 		let filtered = pandalsWithDistance
 
-		// Apply visited filter first
+		// Apply visited filters
 		if (hideVisited) {
 			filtered = filtered.filter((pandal) => !visited.has(pandal.id))
+		}
+		if (showVisitedOnly) {
+			filtered = filtered.filter((pandal) => visited.has(pandal.id))
+		}
+
+		// Apply favorites filters
+		if (hideFavorites) {
+			filtered = filtered.filter((pandal) => !favorites.has(pandal.id))
+		}
+		if (showFavoritesOnly) {
+			filtered = filtered.filter((pandal) => favorites.has(pandal.id))
 		}
 
 		// Apply search filter
@@ -86,7 +120,16 @@ export default function AllPandalsScreen() {
 		}
 
 		return filtered
-	}, [pandalsWithDistance, searchQuery, hideVisited, visited])
+	}, [
+		pandalsWithDistance,
+		searchQuery,
+		hideVisited,
+		showVisitedOnly,
+		hideFavorites,
+		showFavoritesOnly,
+		visited,
+		favorites
+	])
 
 	const sortedPandals = useMemo(() => {
 		const sorted = [...filteredPandals]
@@ -132,15 +175,53 @@ export default function AllPandalsScreen() {
 	}, [loadPandals, supabase, refreshLocation])
 
 	const handleSortSelect = useCallback(
-		(option: SortOption | 'remove-visited') => {
-			if (option === 'remove-visited') {
-				setHideVisited(!hideVisited)
-			} else {
-				setSortBy(option)
+		(
+			option:
+				| SortOption
+				| 'remove-visited'
+				| 'show-visited-only'
+				| 'show-favorites-only'
+				| 'remove-favorites'
+		) => {
+			switch (option) {
+				case 'remove-visited':
+					if (hideVisited) {
+						setHideVisited(false)
+					} else {
+						setHideVisited(true)
+						setShowVisitedOnly(false)
+					}
+					break
+				case 'show-visited-only':
+					if (showVisitedOnly) {
+						setShowVisitedOnly(false)
+					} else {
+						setShowVisitedOnly(true)
+						setHideVisited(false)
+					}
+					break
+				case 'show-favorites-only':
+					if (showFavoritesOnly) {
+						setShowFavoritesOnly(false)
+					} else {
+						setShowFavoritesOnly(true)
+						setHideFavorites(false)
+					}
+					break
+				case 'remove-favorites':
+					if (hideFavorites) {
+						setHideFavorites(false)
+					} else {
+						setHideFavorites(true)
+						setShowFavoritesOnly(false)
+					}
+					break
+				default:
+					setSortBy(option)
+					break
 			}
-			setShowSortModal(false)
 		},
-		[hideVisited]
+		[hideVisited, showVisitedOnly, showFavoritesOnly, hideFavorites]
 	)
 
 	const clearSearch = useCallback(() => {
@@ -148,12 +229,45 @@ export default function AllPandalsScreen() {
 		searchInputRef.current?.focus()
 	}, [])
 
+	const getFilterState = useCallback(
+		(filterValue: string) => {
+			switch (filterValue) {
+				case 'remove-visited':
+					return hideVisited
+				case 'show-visited-only':
+					return showVisitedOnly
+				case 'show-favorites-only':
+					return showFavoritesOnly
+				case 'remove-favorites':
+					return hideFavorites
+				default:
+					return false
+			}
+		},
+		[hideVisited, showVisitedOnly, showFavoritesOnly, hideFavorites]
+	)
+
 	const getCurrentSortLabel = useCallback(() => {
 		const sortLabel =
 			SORT_OPTIONS.find((option) => option.value === sortBy)?.label || 'Sort'
-		const filterLabel = hideVisited ? ' (Visited Hidden)' : ''
+		const filters: string[] = []
+
+		if (hideVisited) {
+			filters.push('Hide Visited')
+		}
+		if (showVisitedOnly) {
+			filters.push('Visited Only')
+		}
+		if (hideFavorites) {
+			filters.push('Hide Favorites')
+		}
+		if (showFavoritesOnly) {
+			filters.push('Favorites Only')
+		}
+
+		const filterLabel = filters.length > 0 ? ` (${filters.join(', ')})` : ''
 		return sortLabel + filterLabel
-	}, [sortBy, hideVisited])
+	}, [sortBy, hideVisited, showVisitedOnly, hideFavorites, showFavoritesOnly])
 
 	const renderPandalCard = useCallback(
 		({ item: pandal }: { item: PandalWithDistance }) => {
@@ -305,10 +419,10 @@ export default function AllPandalsScreen() {
 					</Text>
 
 					<TouchableOpacity
-						className="flex-row items-center rounded-lg bg-gray-100 px-3 py-2"
+						className="ml-2 max-w-[60%] flex-row items-center rounded-lg bg-gray-100 px-2.5 py-1.5"
 						onPress={() => setShowSortModal(true)}
 					>
-						<Text className="mr-1 text-[12px] text-gray-700">
+						<Text className="mr-1 flex-shrink text-[12px] text-gray-700" numberOfLines={1}>
 							{getCurrentSortLabel()}
 						</Text>
 						<Ionicons color="#6B7280" name="chevron-down" size={14} />
@@ -360,7 +474,12 @@ export default function AllPandalsScreen() {
 				transparent={true}
 				visible={showSortModal}
 			>
-				<View className="flex-1 justify-end bg-black">
+				<View className="flex-1 justify-end bg-black/50">
+					<TouchableOpacity
+						activeOpacity={1}
+						className="flex-1"
+						onPress={() => setShowSortModal(false)}
+					/>
 					<View className="rounded-t-2xl bg-white">
 						<View className="flex-row items-center justify-between border-gray-200 border-b p-4">
 							<Text className="font-semibold text-gray-900 text-lg">
@@ -381,7 +500,7 @@ export default function AllPandalsScreen() {
 									<View className="flex-row items-center">
 										<Text
 											className={`text-base ${
-												(option.isFilter && hideVisited) ||
+												(option.isFilter && getFilterState(option.value)) ||
 												(!option.isFilter && sortBy === option.value)
 													? 'font-semibold text-black'
 													: 'text-gray-700'
@@ -396,7 +515,7 @@ export default function AllPandalsScreen() {
 										)}
 									</View>
 									{(option.isFilter
-										? hideVisited
+										? getFilterState(option.value)
 										: sortBy === option.value) && (
 										<Ionicons color="#000" name="checkmark" size={20} />
 									)}
