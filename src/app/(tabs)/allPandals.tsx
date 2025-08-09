@@ -91,7 +91,6 @@ export default function AllPandalsScreen() {
 	const filteredPandals = useMemo(() => {
 		let filtered = pandalsWithDistance
 
-		// Apply visited filters
 		if (hideVisited) {
 			filtered = filtered.filter((pandal) => !visited.has(pandal.id))
 		}
@@ -99,7 +98,6 @@ export default function AllPandalsScreen() {
 			filtered = filtered.filter((pandal) => visited.has(pandal.id))
 		}
 
-		// Apply favorites filters
 		if (hideFavorites) {
 			filtered = filtered.filter((pandal) => !favorites.has(pandal.id))
 		}
@@ -107,7 +105,6 @@ export default function AllPandalsScreen() {
 			filtered = filtered.filter((pandal) => favorites.has(pandal.id))
 		}
 
-		// Apply search filter
 		if (searchQuery.trim()) {
 			const query = searchQuery.toLowerCase().trim()
 			filtered = filtered.filter(
@@ -154,9 +151,7 @@ export default function AllPandalsScreen() {
 
 	const handlePandalPress = useCallback(
 		(pandal: Pandals) => {
-			// Set the selected pandal in the global store
 			setSelectedPandal(pandal)
-			// Navigate to the Maps tab
 			router.push('/')
 		},
 		[setSelectedPandal]

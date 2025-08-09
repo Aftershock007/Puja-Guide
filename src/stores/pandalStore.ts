@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js'
+import { Alert } from 'react-native'
 import { create } from 'zustand'
 import { subscribeWithSelector } from 'zustand/middleware'
 import type { Pandals } from '@/types/dbTypes'
@@ -156,7 +157,7 @@ export const usePandalStore = create<PandalState & PandalActions>()(
 					})
 				}
 			} catch {
-				// console.error('Failed to refresh pandal:', error)
+				Alert.alert('Failed to refresh pandals')
 			}
 		},
 

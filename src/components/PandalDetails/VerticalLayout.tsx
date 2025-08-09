@@ -280,7 +280,6 @@ const VerticalLayout = memo<VerticalLayoutProps>(
 								</View>
 							</View>
 						)}
-						{/* <View className="my-1.5 h-[1.5px] border-t border-t-white/80 bg-gray-200 shadow-sm" /> */}
 						<View className="mt-1 flex flex-row items-center">
 							<Text className="mt-[2px] mr-1 font-bold text-[13px]">
 								Rate this pandal:

@@ -117,7 +117,7 @@ const NearestPandals = memo<NearestPandalsProps>(
 									isFavorited={isFavorited}
 									isVisited={isVisited}
 									key={pandal.id}
-									onPress={onPandalPress || (() => {})}
+									onPress={onPandalPress}
 									pandal={pandal}
 									userLocation={userLocation}
 								/>

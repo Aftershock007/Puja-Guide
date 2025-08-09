@@ -32,12 +32,9 @@ export default function HomeScreen() {
 	const setSelectedPandal = usePandalStore((state) => state.setSelectedPandal)
 	const retryFetch = usePandalStore((state) => state.retryFetch)
 
-	// Automatically show bottom sheet and focus map when a pandal is selected from another tab
 	useEffect(() => {
 		if (selectedPandal && !isBottomSheetVisible) {
 			setIsBottomSheetVisible(true)
-
-			// Focus map camera on the selected pandal
 			if (
 				mapRef.current &&
 				selectedPandal.latitude &&
@@ -51,7 +48,7 @@ export default function HomeScreen() {
 						longitudeDelta: 0.04
 					},
 					1000
-				) // 1 second animation
+				)
 			}
 		}
 	}, [selectedPandal, isBottomSheetVisible])
@@ -79,7 +76,6 @@ export default function HomeScreen() {
 	const handlePandalNavigate = (newPandal: Pandals) => {
 		setSelectedPandal(newPandal)
 
-		// Focus map camera on the new pandal
 		if (mapRef.current && newPandal.latitude && newPandal.longitude) {
 			mapRef.current.animateToRegion(
 				{
@@ -89,7 +85,7 @@ export default function HomeScreen() {
 					longitudeDelta: 0.04
 				},
 				1000
-			) // 1 second animation
+			)
 		}
 	}
 

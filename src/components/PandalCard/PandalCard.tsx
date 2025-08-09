@@ -6,7 +6,7 @@ import type { Pandals } from '@/types/dbTypes'
 
 interface PandalCardProps {
 	pandal: PandalWithDistance | Pandals
-	onPress: (pandal: Pandals) => void
+	onPress?: (pandal: Pandals) => void
 	isFavorited: boolean
 	isVisited: boolean
 	userLocation?: { latitude: number; longitude: number } | null
@@ -30,7 +30,7 @@ const PandalCard = memo<PandalCardProps>(
 			<TouchableOpacity
 				activeOpacity={0.7}
 				className={className}
-				onPress={() => onPress(pandal)}
+				onPress={() => onPress?.(pandal)}
 			>
 				<View className="android:elevation-2 rounded-lg border border-gray-200 bg-white px-3 py-2">
 					<View className="mb-1 flex-row items-center">
